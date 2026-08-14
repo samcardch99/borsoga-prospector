@@ -1,0 +1,22 @@
+{
+  "name": "borsoga-prospector",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Plataforma interna de prospección B2B — Borsoga Studio",
+  "packageManager": "pnpm@10.6.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @borsoga/web dev",
+    "dev:worker": "pnpm --filter @borsoga/worker dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "db:generate": "pnpm --filter @borsoga/db generate",
+    "db:migrate": "pnpm --filter @borsoga/db migrate",
+    "db:studio": "pnpm --filter @borsoga/db studio"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+
+  :root, body:has(.pc-dark) {
+    --bg:#0e0f12; --panel:#14161a; --card:#181b1f; --card2:#15181c; --inset:#1b1e22; --input:#1a1d21;
+    --glass:#14161af2; --glass2:#14161ae8; --glass3:#14161ad6;
+    --line:#22252a; --line-soft:#1b1e22; --line2:#2b2f35; --line3:#343941; --chip:#212429; --hover:#1e2126;
+    --text:#e9eaec; --text2:#c6cacf; --muted:#99a0a7; --dim:#757c84; --dim2:#5a6068; --dim3:#3e434a;
+    --crit:#c4707a; --crit2:#cf858d; --warn:#c0a068; --warn2:#d0b585; --warn-soft:#282216; --ok:#8faa8f;
+    --b1:#93a9bd; --b1-soft:#1d2329; --b3:#c0a482; --b3-soft:#28221b;
+    --map-bg:#101317; --map-bg2:#101317; --water:#0d1418; --island:#12161a;
+    --road1:#1a1e23; --road2:#161a1e; --road3:#22272d; --road4:#1c2126; --block:#151a1e;
+    --pin-hi:#211c12; --pin-mid:#221b12;
+    --btn-bg:#e9eaec; --btn-fg:#14161a; --btn-bg-h:#d1d4d8;
+    --accent:#c9a870; --accent2:#e0c193; --accent-ink:#17120c; --accent-soft:#2a2317; --accent-line:#c9a87055;
+    --accent-glow:rgba(201,168,112,.10); --accent-glow2:rgba(201,168,112,.03);
+    --accent-ring:rgba(201,168,112,.16); --accent-ring2:rgba(201,168,112,.13);
+    --accent-shadow:rgba(201,168,112,.26); --accent-scan:rgba(201,168,112,.45);
+  }
+  .pc-dark.p-tinta, body:has(.pc-dark.p-tinta) {
+    --accent:#8ea6cc; --accent2:#adbfdd; --accent-ink:#0f141c; --accent-soft:#1b2230; --accent-line:#8ea6cc55;
+    --accent-glow:rgba(142,166,204,.10); --accent-glow2:rgba(142,166,204,.03);
+    --accent-ring:rgba(142,166,204,.16); --accent-ring2:rgba(142,166,204,.13);
+    --accent-shadow:rgba(142,166,204,.26); --accent-scan:rgba(142,166,204,.45);
+  }
+  .pc-dark.p-pino, body:has(.pc-dark.p-pino) {
+    --accent:#93b59d; --accent2:#b0cbb8; --accent-ink:#0d1611; --accent-soft:#18231c; --accent-line:#93b59d55;
+    --accent-glow:rgba(147,181,157,.10); --accent-glow2:rgba(147,181,157,.03);
+    --accent-ring:rgba(147,181,157,.16); --accent-ring2:rgba(147,181,157,.13);
+    --accent-shadow:rgba(147,181,157,.26); --accent-scan:rgba(147,181,157,.45);
+  }
+  .pc-light, body:has(.pc-light) {
+    --bg:#f3f1ed; --panel:#fffefb; --card:#faf8f4; --card2:#f8f6f2; --inset:#f1eee8; --input:#f7f5f1;
+    --glass:#fffefbf5; --glass2:#fffefbec; --glass3:#fffefbe0;
+    --line:#e6e1d9; --line-soft:#eeeae3; --line2:#dbd5cb; --line3:#cec7bb; --chip:#eeeae3; --hover:#f0ece5;
+    --text:#1c1d20; --text2:#41454a; --muted:#63686f; --dim:#6d737a; --dim2:#7b8188; --dim3:#c6cacf;
+    --crit:#a2454f; --crit2:#8d3d46; --warn:#8a6a2f; --warn2:#75591f; --warn-soft:#f4ecdd; --ok:#4d7a56;
+    --b1:#4a6b85; --b1-soft:#e9edf2; --b3:#8a6a45; --b3-soft:#f3ece3;
+    --map-bg:#f1efea; --map-bg2:#f1efea; --water:#dbe4e5; --island:#e8e5df;
+    --road1:#e2ded6; --road2:#e9e5de; --road3:#d4cfc5; --road4:#dcd7ce; --block:#d6d1c8;
+    --pin-hi:#f3ead9; --pin-mid:#f4ecdb;
+    --btn-bg:#1c1d20; --btn-fg:#faf8f4; --btn-bg-h:#34363b;
+    --accent:#8a6636; --accent2:#6e5028; --accent-ink:#fffdf8; --accent-soft:#f1e8da; --accent-line:#8a663655;
+    --accent-glow:rgba(138,102,54,.10); --accent-glow2:rgba(138,102,54,.03);
+    --accent-ring:rgba(138,102,54,.15); --accent-ring2:rgba(138,102,54,.12);
+    --accent-shadow:rgba(138,102,54,.22); --accent-scan:rgba(138,102,54,.4);
+  }
+  .pc-light.p-tinta, body:has(.pc-light.p-tinta) {
+    --accent:#3a5a8c; --accent2:#2b4574; --accent-ink:#fbfcfe; --accent-soft:#e7ecf4; --accent-line:#3a5a8c55;
+    --accent-glow:rgba(58,90,140,.10); --accent-glow2:rgba(58,90,140,.03);
+    --accent-ring:rgba(58,90,140,.15); --accent-ring2:rgba(58,90,140,.12);
+    --accent-shadow:rgba(58,90,140,.22); --accent-scan:rgba(58,90,140,.4);
+  }
+  .pc-light.p-pino, body:has(.pc-light.p-pino) {
+    --accent:#35634a; --accent2:#284d39; --accent-ink:#fbfdfb; --accent-soft:#e6efe8; --accent-line:#35634a55;
+    --accent-glow:rgba(53,99,74,.10); --accent-glow2:rgba(53,99,74,.03);
+    --accent-ring:rgba(53,99,74,.15); --accent-ring2:rgba(53,99,74,.12);
+    --accent-shadow:rgba(53,99,74,.22); --accent-scan:rgba(53,99,74,.4);
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); }
+  * { box-sizing: border-box; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--accent2); }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 99px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  @keyframes pulseRing { 0% { transform: scale(.6); opacity: .55 } 100% { transform: scale(1.7); opacity: 0 } }
+  @keyframes ants { to { stroke-dashoffset: -24 } }
+  @keyframes scanY { 0% { top: 0 } 100% { top: 100% } }
+  @keyframes blink { 0%, 49% { opacity: 1 } 50%, 100% { opacity: 0 } }
+  @keyframes crawl { 0%, 12% { transform: translate(6px, 8px) } 30% { transform: translate(112px, 58px) } 48% { transform: translate(52px, 126px) } 66% { transform: translate(132px, 164px) } 84% { transform: translate(26px, 206px) } 100% { transform: translate(6px, 8px) } }
+  @keyframes bar { 0% { width: 8% } 100% { width: 96% } }
+</style>
+</helmet>
+<div class="{{ themeClass }}" style="width: 1600px; height: 1000px; background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); display: flex; flex-direction: column; overflow: hidden;">
+
+  <header style="height: 52px; flex: none; border-bottom: 1px solid var(--line); background: var(--panel); display: flex; align-items: center; gap: 18px; padding: 0 16px;">
+    <div style="display: flex; align-items: center; gap: 10px; flex: none;">
+      <div style="width: 25px; height: 25px; border-radius: 7px; background: var(--accent); display: flex; align-items: center; justify-content: center; color: var(--accent-ink); font-weight: 700; font-size: 13px;">B</div>
+      <div style="font-size: 13.5px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap;">Borsoga <span style="color: var(--dim2);">/</span> <span style="color: var(--muted);">Prospector</span></div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px; flex: 1; max-width: 620px;">
+      <div style="flex: 1; min-width: 0; height: 32px; border: 1px solid var(--line2); border-radius: 8px; background: var(--input); display: flex; align-items: center; gap: 8px; padding: 0 10px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2" style="flex: none;"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4.5-4.5" /></svg>
+        <span style="font-size: 12.5px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Miami-Dade · Doral, Medley, Hialeah</span>
+      </div>
+      <div style="flex: none; height: 32px; border: 1px solid var(--line2); border-radius: 8px; background: var(--input); display: flex; align-items: center; gap: 7px; padding: 0 10px; font-size: 12.5px; color: var(--muted);">
+        <span style="white-space: nowrap;">Sector</span><span style="color: var(--text); white-space: nowrap;">Millwork +4</span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2"><path d="M6 9l6 6 6-6" /></svg>
+      </div>
+      <div style="flex: none; height: 32px; border: 1px solid var(--line2); border-radius: 8px; background: var(--input); display: flex; align-items: center; gap: 7px; padding: 0 10px; font-size: 12.5px; color: var(--muted);">
+        <span style="white-space: nowrap;">Ticket</span><span style="color: var(--text); font-family: 'JetBrains Mono', monospace; white-space: nowrap;">$20k+</span>
+      </div>
+      <button style="flex: none; height: 32px; padding: 0 13px; border: none; border-radius: 8px; background: var(--btn-bg); color: var(--btn-fg); font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 7px; white-space: nowrap;" style-hover="background: var(--btn-bg-h);">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2.2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4" /><circle cx="12" cy="12" r="3" /></svg>
+        Escanear zona
+      </button>
+    </div>
+
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 13px; flex: none;">
+      <div style="display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--muted); white-space: nowrap;">
+        <span style="width: 6px; height: 6px; border-radius: 99px; background: var(--accent);"></span>
+        Places API <span style="font-family: 'JetBrains Mono', monospace; color: var(--dim);">2.140/5.000</span>
+      </div>
+      <div onClick="{{ toggleTheme }}" style="width: 26px; height: 26px; border: 1px solid var(--line2); border-radius: 7px; display: flex; align-items: center; justify-content: center; cursor: pointer;" style-hover="background: var(--chip);">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.6"><path d="M21 13a8.5 8.5 0 01-10-10 8.5 8.5 0 100 10z" /></svg>
+      </div>
+      <div style="width: 1px; height: 18px; background: var(--line2);"></div>
+      <div style="width: 26px; height: 26px; border-radius: 99px; background: var(--chip); border: 1px solid var(--line2); display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 500; color: var(--text2);">JB</div>
+    </div>
+  </header>
+
+  <nav style="height: 40px; flex: none; border-bottom: 1px solid var(--line); background: var(--bg); display: flex; align-items: center; padding: 0 16px; gap: 2px;">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+      <div onClick="{{ t.onClick }}" style="height: 26px; padding: 0 11px; border-radius: 7px; display: flex; align-items: center; gap: 7px; font-size: 12.5px; cursor: pointer; white-space: nowrap; background: {{ t.bg }}; color: {{ t.fg }};" style-hover="color: var(--text);">
+        {{ t.label }}
+        <sc-if value="{{ t.count }}" hint-placeholder-val="{{ true }}">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: {{ t.countColor }};">{{ t.count }}</span>
+        </sc-if>
+      </div>
+    </sc-for>
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 11.5px; color: var(--dim2); font-family: 'JetBrains Mono', monospace;">
+      <span>último escaneo 14 ago 2026 · 09:12</span>
+      <span style="color: var(--accent);">●</span>
+    </div>
+  </nav>
+
+  <sc-if value="{{ isMapa }}" hint-placeholder-val="{{ true }}">
+  <div style="flex: 1; display: flex; min-height: 0;">
+
+    <aside style="width: 336px; flex: none; border-right: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0;">
+      <div style="padding: 13px 15px 12px; border-bottom: 1px solid var(--line);">
+        <div style="display: flex; align-items: baseline; justify-content: space-between;">
+          <div style="font-size: 12.5px; font-weight: 500;">Prospectos en la zona</div>
+          <div style="font-size: 11.5px; color: var(--dim); font-family: 'JetBrains Mono', monospace;">96</div>
+        </div>
+        <div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
+          <div style="height: 25px; padding: 0 10px; border-radius: 99px; background: var(--accent); color: var(--accent-ink); font-size: 11.5px; font-weight: 500; display: flex; align-items: center; gap: 6px;">Encaje ICP <span style="font-family: 'JetBrains Mono', monospace;">34</span></div>
+          <div style="height: 25px; padding: 0 10px; border-radius: 99px; border: 1px solid var(--line2); color: var(--muted); font-size: 11.5px; display: flex; align-items: center; gap: 6px;">Sin contactar <span style="font-family: 'JetBrains Mono', monospace; color: var(--dim);">71</span></div>
+          <div style="height: 25px; padding: 0 10px; border-radius: 99px; border: 1px solid var(--line2); color: var(--muted); font-size: 11.5px; display: flex; align-items: center; gap: 6px;">Descartados <span style="font-family: 'JetBrains Mono', monospace; color: var(--dim);">18</span></div>
+        </div>
+      </div>
+
+      <div style="flex: 1; overflow-y: auto; min-height: 0;">
+        <sc-if value="{{ esCargando }}" hint-placeholder-val="{{ false }}">
+          <sc-for list="{{ skeletons }}" as="sk" hint-placeholder-count="7">
+            <div style="padding: 12px 15px; border-bottom: 1px solid var(--line-soft); display: flex; gap: 11px;">
+              <div style="width: 32px; height: 32px; flex: none; border-radius: 8px; background: var(--chip);"></div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="height: 9px; width: 62%; border-radius: 3px; background: var(--chip);"></div>
+                <div style="height: 8px; width: 40%; border-radius: 3px; background: var(--line-soft); margin-top: 7px;"></div>
+                <div style="height: 15px; width: 74%; border-radius: 4px; background: var(--line-soft); margin-top: 9px;"></div>
+              </div>
+            </div>
+          </sc-for>
+        </sc-if>
+        <sc-if value="{{ esVacio }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 30px 22px;">
+            <div style="font-size: 13px; font-weight: 500;">Ningún negocio encaja con el ICP en esta zona</div>
+            <div style="font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.6;">Se encontraron 34 negocios, pero todos quedaron fuera: 19 sin producto propio, 11 franquicias y 4 por debajo del ticket mínimo.</div>
+            <div style="display: grid; gap: 7px; margin-top: 16px;">
+              <div style="height: 32px; border: 1px solid var(--line2); border-radius: 8px; display: flex; align-items: center; padding: 0 11px; font-size: 12px; color: var(--text2); cursor: pointer;" style-hover="background: var(--chip);">Ampliar el radio a 2,5 km</div>
+              <div style="height: 32px; border: 1px solid var(--line2); border-radius: 8px; display: flex; align-items: center; padding: 0 11px; font-size: 12px; color: var(--text2); cursor: pointer;" style-hover="background: var(--chip);">Añadir sectores: construcción, interiorismo</div>
+              <div style="height: 32px; border: 1px solid var(--line2); border-radius: 8px; display: flex; align-items: center; padding: 0 11px; font-size: 12px; color: var(--text2); cursor: pointer;" style-hover="background: var(--chip);">Bajar el ticket mínimo a $12.000</div>
+            </div>
+            <div style="font-size: 11px; color: var(--dim2); margin-top: 16px; font-family: 'JetBrains Mono', monospace;">o revisa los 34 descartados con su motivo</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ esError }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 22px;">
+            <div style="border: 1px solid var(--line2); border-left: 3px solid var(--crit); border-radius: 10px; background: var(--card); padding: 13px;">
+              <div style="font-size: 12.5px; font-weight: 500; color: var(--crit);">Cuota de Places agotada</div>
+              <div style="font-size: 11.5px; color: var(--muted); margin-top: 7px; line-height: 1.55;">5.000 de 5.000 llamadas este mes. El escaneo se detuvo en el negocio 61 de 96 y quedó guardado.</div>
+              <div style="font-size: 10.5px; color: var(--dim2); margin-top: 9px; font-family: 'JetBrains Mono', monospace;">OVER_QUERY_LIMIT · 14 ago 09:47</div>
+            </div>
+            <div style="display: grid; gap: 7px; margin-top: 14px;">
+              <div style="height: 32px; border: 1px solid var(--line2); border-radius: 8px; display: flex; align-items: center; padding: 0 11px; font-size: 12px; color: var(--text2); cursor: pointer;" style-hover="background: var(--chip);">Reanudar el 1 de septiembre</div>
+              <div style="height: 32px; border: 1px solid var(--line2); border-radius: 8px; display: flex; align-items: center; padding: 0 11px; font-size: 12px; color: var(--text2); cursor: pointer;" style-hover="background: var(--chip);">Subir el límite de facturación</div>
+            </div>
+            <div style="font-size: 11.5px; color: var(--muted); margin-top: 14px; line-height: 1.55;">Los 61 prospectos ya auditados siguen disponibles en la caché local.</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ esNormal }}" hint-placeholder-val="{{ true }}">
+        <sc-for list="{{ leads }}" as="lead" hint-placeholder-count="8">
+          <div onClick="{{ lead.onClick }}" style="padding: 12px 15px; border-bottom: 1px solid var(--line-soft); display: flex; gap: 11px; cursor: pointer; background: {{ lead.bg }}; opacity: {{ lead.opacity }};" style-hover="background: var(--card);">
+            <div style="width: 32px; height: 32px; flex: none; border-radius: 8px; background: var(--chip); border: 1px solid var(--line2); display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-family: 'JetBrains Mono', monospace; color: {{ lead.scoreColor }};">{{ lead.score }}</div>
+            <div style="min-width: 0; flex: 1;">
+              <div style="font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: {{ lead.nameColor }};">{{ lead.name }}</div>
+              <div style="font-size: 11.5px; color: var(--dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ lead.meta }}</div>
+              <div style="display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; align-items: center;">
+                <sc-for list="{{ lead.branches }}" as="b" hint-placeholder-count="2">
+                  <div style="height: 19px; padding: 0 6px; border-radius: 5px; background: {{ b.bg }}; font-size: 10.5px; color: {{ b.fg }}; display: flex; align-items: center; gap: 4px; font-family: 'JetBrains Mono', monospace;">{{ b.label }} <span style="opacity: .7;">{{ b.n }}</span></div>
+                </sc-for>
+                <span style="font-size: 10.5px; color: var(--dim2); font-family: 'JetBrains Mono', monospace; margin-left: auto;">{{ lead.ticket }}</span>
+              </div>
+              <sc-if value="{{ lead.discardReason }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size: 10.5px; color: var(--dim2); margin-top: 6px; font-style: italic;">{{ lead.discardReason }}</div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+        </sc-if>
+      </div>
+
+      <div style="flex: none; border-top: 1px solid var(--line); padding: 9px 15px; display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--dim);">
+        <span>Ordenado por score total</span>
+        <span style="color: var(--text2); cursor: pointer;">Exportar JSON</span>
+      </div>
+    </aside>
+
+    <main style="flex: 1; position: relative; min-width: 0; background: var(--map-bg); overflow: hidden;">
+      <svg viewBox="0 0 900 700" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%;">
+        <rect width="900" height="700" fill="var(--map-bg2)" />
+        <path d="M690 -20 C 700 90, 660 190, 672 300 C 684 420, 640 520, 660 720 L 980 720 L 980 -20 Z" fill="var(--water)" />
+        <path d="M792 -20 C 800 80, 786 160, 792 250 C 798 340, 782 420, 790 520 L 830 520 C 824 400, 838 260, 828 -20 Z" fill="var(--island)" />
+        <g stroke="var(--road1)" stroke-width="13" stroke-linecap="square">
+          <path d="M-20 90 H 676" /><path d="M-20 205 H 668" /><path d="M-20 320 H 674" /><path d="M-20 435 H 650" /><path d="M-20 550 H 656" /><path d="M-20 655 H 660" />
+          <path d="M110 -20 V 700" /><path d="M240 -20 V 700" /><path d="M370 -20 V 700" /><path d="M500 -20 V 700" /><path d="M610 -20 V 700" />
+        </g>
+        <g stroke="var(--road2)" stroke-width="5">
+          <path d="M-20 40 H 672" /><path d="M-20 148 H 670" /><path d="M-20 262 H 672" /><path d="M-20 378 H 664" /><path d="M-20 492 H 652" /><path d="M-20 604 H 658" />
+          <path d="M50 -20 V 700" /><path d="M175 -20 V 700" /><path d="M305 -20 V 700" /><path d="M435 -20 V 700" /><path d="M556 -20 V 700" /><path d="M650 -20 V 690" />
+        </g>
+        <g stroke="var(--road3)" stroke-width="18" fill="none" stroke-linecap="round">
+          <path d="M420 -20 C 428 160, 404 300, 418 460 C 428 580, 412 640, 420 720" />
+          <path d="M-20 232 C 200 226, 420 244, 668 236" />
+        </g>
+        <g stroke="var(--road4)" stroke-width="7" fill="none">
+          <path d="M672 172 H 800" /><path d="M676 300 H 806" />
+        </g>
+        <g fill="var(--block)">
+          <rect x="196" y="336" width="96" height="26" rx="3" /><rect x="524" y="120" width="104" height="42" rx="3" /><rect x="64" y="452" width="42" height="52" rx="3" /><rect x="452" y="576" width="88" height="34" rx="3" />
+        </g>
+      </svg>
+
+      <div style="position: absolute; left: 40%; top: 44%; width: 500px; height: 500px; transform: translate(-50%, -50%); border-radius: 99px; border: 1px dashed var(--accent-line); background: radial-gradient(circle, var(--accent-glow), var(--accent-glow2) 70%, transparent);"></div>
+      <div style="position: absolute; left: 40%; top: 44%; transform: translate(-50%, -50%); width: 9px; height: 9px; border-radius: 99px; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-ring);"></div>
+
+      <sc-for list="{{ pins }}" as="pin" hint-placeholder-count="10">
+        <div style="position: absolute; left: {{ pin.x }}; top: {{ pin.y }}; transform: translate(-50%, -50%);">
+          <div style="width: 29px; height: 29px; border-radius: 99px; background: {{ pin.bg }}; border: 1.5px solid {{ pin.border }}; color: {{ pin.fg }}; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 500; box-shadow: 0 6px 16px rgba(0,0,0,.5); cursor: pointer; opacity: {{ pin.opacity }};">{{ pin.score }}</div>
+        </div>
+      </sc-for>
+
+      <svg style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none;">
+        <line x1="27%" y1="24%" x2="31%" y2="46%" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round" opacity=".85" style="animation: ants 1.1s linear infinite;" />
+        <line x1="31%" y1="46%" x2="35%" y2="51%" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round" opacity=".85" style="animation: ants 1.1s linear infinite;" />
+        <line x1="29.5%" y1="20%" x2="46%" y2="25%" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round" opacity=".85" style="animation: ants 1.1s linear infinite;" />
+        <line x1="46%" y1="25%" x2="54.5%" y2="29%" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round" opacity=".85" style="animation: ants 1.1s linear infinite;" />
+        <circle cx="31%" cy="46%" r="2" fill="var(--accent)" opacity=".7" />
+        <circle cx="35%" cy="51%" r="3" fill="var(--accent)" />
+        <circle cx="46%" cy="25%" r="2" fill="var(--accent)" opacity=".7" />
+        <circle cx="54.5%" cy="29%" r="3" fill="var(--accent)" />
+      </svg>
+
+      <div style="position: absolute; left: 26%; top: 21%; transform: translate(-50%, -50%); width: 62px; height: 62px;">
+        <div style="width: 100%; height: 100%; border-radius: 99px; border: 2px solid var(--accent); animation: pulseRing 2.4s ease-out infinite;"></div>
+      </div>
+      <div style="position: absolute; left: 26%; top: 21%; transform: translate(-50%, -50%);">
+        <div style="width: 38px; height: 38px; border-radius: 99px; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; font-weight: 700; box-shadow: 0 10px 28px var(--accent-shadow); cursor: pointer;">91</div>
+      </div>
+
+      <div style="position: absolute; top: 14px; left: 14px; display: flex; gap: 8px;">
+        <div style="height: 31px; border: 1px solid var(--line2); border-radius: 8px; background: var(--glass3); backdrop-filter: blur(8px); display: flex; align-items: center; padding: 2px; gap: 2px;">
+          <div style="height: 25px; padding: 0 10px; border-radius: 6px; background: var(--line2); font-size: 11.5px; color: var(--text); display: flex; align-items: center;">Score total</div>
+          <div style="height: 25px; padding: 0 10px; border-radius: 6px; font-size: 11.5px; color: var(--muted); display: flex; align-items: center; cursor: pointer;" style-hover="color: var(--text);">Rama</div>
+          <div style="height: 25px; padding: 0 10px; border-radius: 6px; font-size: 11.5px; color: var(--muted); display: flex; align-items: center; cursor: pointer;" style-hover="color: var(--text);">Ticket</div>
+          <div style="height: 25px; padding: 0 10px; border-radius: 6px; font-size: 11.5px; color: var(--muted); display: flex; align-items: center; cursor: pointer;" style-hover="color: var(--text);">CRM</div>
+        </div>
+        <div style="height: 31px; padding: 0 11px; border: 1px solid var(--line2); border-radius: 8px; background: var(--glass3); backdrop-filter: blur(8px); display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--muted); cursor: pointer;" style-hover="color: var(--text);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l7-16 3 8 6-2-4 10z" /></svg>
+          Dibujar área
+        </div>
+      </div>
+
+      <div style="position: absolute; top: 14px; right: 14px; width: 208px; border: 1px solid var(--line2); border-radius: 10px; background: var(--glass2); backdrop-filter: blur(10px); padding: 11px;">
+        <div style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim);">Escaneo en curso</div>
+        <div style="margin-top: 8px; height: 4px; border-radius: 99px; background: var(--line2); overflow: hidden;">
+          <div style="width: 64%; height: 100%; background: var(--accent);"></div>
+        </div>
+        <div style="margin-top: 8px; display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted);">
+          <span>Auditando</span><span style="font-family: 'JetBrains Mono', monospace; color: var(--text);">61/96</span>
+        </div>
+        <div style="margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--line); display: grid; gap: 4px; font-size: 10.5px; color: var(--dim2); font-family: 'JetBrains Mono', monospace;">
+          <div style="color: var(--muted);">✓ places.nearby · 96</div>
+          <div style="color: var(--muted);">✓ icp.filter · 78 / 18 desc.</div>
+          <div>… audit.branch · 61</div>
+        </div>
+        <div style="margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 10.5px; font-family: 'JetBrains Mono', monospace; color: var(--dim);">
+          <span>coste</span><span style="color: var(--text2);">$3,84</span>
+        </div>
+      </div>
+
+      <sc-if value="{{ liveWindows }}" hint-placeholder-val="{{ true }}">
+      <div style="position: absolute; left: 14px; top: 47%; width: 344px; border: 1px solid var(--line3); border-radius: 12px; background: var(--glass); backdrop-filter: blur(14px); box-shadow: 0 24px 60px rgba(0,0,0,.6); overflow: hidden;">
+        <div style="height: 32px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; padding: 0 10px; background: var(--card);">
+          <span style="width: 7px; height: 7px; border-radius: 99px; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring2);"></span>
+          <span style="font-size: 11.5px; font-weight: 500;">Auditoría web en vivo</span>
+          <span style="font-size: 10.5px; color: var(--dim2); font-family: 'JetBrains Mono', monospace; margin-left: auto;">agent · crawler</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--dim2)" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19" /></svg>
+        </div>
+        <div style="padding: 8px 10px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px;">
+          <div style="flex: 1; min-width: 0; height: 23px; border-radius: 6px; background: var(--chip); border: 1px solid var(--line2); display: flex; align-items: center; padding: 0 8px; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--muted); overflow: hidden;">
+            <span style="color: var(--crit2);">!</span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">coralridgemillwork.com/portfolio</span>
+          </div>
+          <span style="font-size: 10.5px; color: var(--dim); font-family: 'JetBrains Mono', monospace; white-space: nowrap;">7/22</span>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 10px;">
+          <div style="position: relative; width: 160px; height: 226px; flex: none; border-radius: 8px; border: 1px solid var(--line2); background: var(--inset); overflow: hidden;">
+            <div style="padding: 8px; display: grid; gap: 6px;">
+              <div style="height: 20px; border-radius: 3px; background: var(--line); display: flex; align-items: center; gap: 4px; padding: 0 5px;">
+                <div style="width: 22px; height: 6px; border-radius: 2px; background: var(--dim3);"></div>
+                <div style="width: 12px; height: 4px; border-radius: 2px; background: var(--line3); margin-left: auto;"></div>
+                <div style="width: 12px; height: 4px; border-radius: 2px; background: var(--line3);"></div>
+              </div>
+              <div style="height: 48px; border-radius: 3px; background: var(--block);"></div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+                <div style="height: 30px; border-radius: 3px; background: var(--block);"></div>
+                <div style="height: 30px; border-radius: 3px; background: var(--block); border: 1px dashed var(--dim3);"></div>
+                <div style="height: 30px; border-radius: 3px; background: var(--block); border: 1px dashed var(--dim3);"></div>
+              </div>
+              <div style="height: 6px; width: 78%; border-radius: 2px; background: var(--line2);"></div>
+              <div style="height: 6px; width: 60%; border-radius: 2px; background: var(--line2);"></div>
+              <div style="height: 26px; border-radius: 3px; background: var(--block);"></div>
+            </div>
+            <div style="position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); box-shadow: 0 0 12px 2px var(--accent-scan); animation: scanY 3.2s ease-in-out infinite alternate;"></div>
+            <div style="position: absolute; left: 0; top: 0; animation: crawl 6s ease-in-out infinite;">
+              <div style="width: 13px; height: 13px; border-radius: 99px; border: 1.5px solid var(--accent); background: var(--accent-ring);"></div>
+            </div>
+            <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 42px; background: linear-gradient(transparent, var(--panel));"></div>
+          </div>
+          <div style="flex: 1; min-width: 0; display: grid; gap: 5px; align-content: start; font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.5;">
+            <div style="color: var(--accent);">✓ / · 200 · 940 ms</div>
+            <div style="color: var(--crit2);">✗ 6 modelos sin imagen</div>
+            <div style="color: var(--warn2);">! 3 imgs de stock (hash dup)</div>
+            <div style="color: var(--crit2);">✗ /es · 404 · sin ES</div>
+            <div style="color: var(--warn2);">! form cotización sin envío</div>
+            <div style="color: var(--dim);">→ HTML servido ≠ DOM (JS)</div>
+            <div style="color: var(--muted);">◦ clasificando por rama<span style="animation: blink 1s step-end infinite;">_</span></div>
+            <div style="margin-top: 3px; height: 3px; border-radius: 99px; background: var(--line2); overflow: hidden;">
+              <div style="height: 100%; background: var(--accent); animation: bar 4s ease-in-out infinite alternate;"></div>
+            </div>
+            <div style="font-family: 'DM Sans', sans-serif; font-size: 10.5px; color: var(--dim); line-height: 1.45;">11 hallazgos con evidencia capturada.</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="position: absolute; right: 14px; top: 26%; width: 356px; border: 1px solid var(--line3); border-radius: 12px; background: var(--glass); backdrop-filter: blur(14px); box-shadow: 0 24px 60px rgba(0,0,0,.6); overflow: hidden;">
+        <div style="height: 32px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; padding: 0 10px; background: var(--card);">
+          <span style="width: 7px; height: 7px; border-radius: 99px; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring2);"></span>
+          <span style="font-size: 11.5px; font-weight: 500;">Personas y menciones</span>
+          <span style="font-size: 10.5px; color: var(--dim2); font-family: 'JetBrains Mono', monospace; margin-left: auto;">agent · osint</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--dim2)" stroke-width="2.5"><path d="M5 5l14 14M19 5L5 19" /></svg>
+        </div>
+        <div style="padding: 10px; display: grid; gap: 7px;">
+          <sc-for list="{{ people }}" as="p" hint-placeholder-count="2">
+            <div style="border: 1px solid var(--line2); border-radius: 9px; background: var(--card); padding: 9px 10px;">
+              <div style="display: flex; align-items: center; gap: 9px;">
+                <div style="width: 28px; height: 28px; flex: none; border-radius: 99px; background: var(--line); border: 1px solid var(--line3); display: flex; align-items: center; justify-content: center; font-size: 10.5px; color: var(--text2);">{{ p.initials }}</div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ p.name }}</div>
+                  <div style="font-size: 10.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ p.role }}</div>
+                </div>
+                <div style="flex: none; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: {{ p.confColor }};">{{ p.conf }}</div>
+              </div>
+              <div style="display: grid; gap: 3px; margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px;">
+                <sc-for list="{{ p.rows }}" as="r" hint-placeholder-count="3">
+                  <div style="display: flex; gap: 8px;">
+                    <span style="width: 52px; flex: none; color: var(--dim2);">{{ r.k }}</span>
+                    <span style="color: {{ r.color }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.v }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="padding: 0 10px 10px;">
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); margin-bottom: 6px;">Menciones en internet</div>
+          <div style="display: grid; gap: 6px;">
+            <sc-for list="{{ news }}" as="n" hint-placeholder-count="3">
+              <div style="display: flex; gap: 8px; align-items: start;">
+                <span style="width: 5px; height: 5px; flex: none; border-radius: 99px; background: {{ n.color }}; margin-top: 6px;"></span>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 11px; color: var(--text2); line-height: 1.35;">{{ n.title }}</div>
+                  <div style="font-size: 10px; color: var(--dim2); font-family: 'JetBrains Mono', monospace; margin-top: 1px;">{{ n.src }}</div>
+                </div>
+              </div>
+            </sc-for>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px;">◦ rastreando 9 fuentes más<span style="animation: blink 1s step-end infinite;">_</span></div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ esCargando }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 320px; border: 1px solid var(--line2); border-radius: 12px; background: var(--glass); backdrop-filter: blur(14px); box-shadow: 0 24px 60px rgba(0,0,0,.28); padding: 18px;">
+          <div style="font-size: 13px; font-weight: 500;">Escaneando Doral y Medley</div>
+          <div style="font-size: 11.5px; color: var(--muted); margin-top: 7px; line-height: 1.55;">96 negocios encontrados. Auditando webs y perfiles uno a uno, tarda entre seis y nueve minutos.</div>
+          <div style="margin-top: 13px; height: 4px; border-radius: 99px; background: var(--chip); overflow: hidden;">
+            <div style="height: 100%; background: var(--accent); animation: bar 3s ease-in-out infinite alternate;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 9px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--dim);">
+            <span>auditando 61/96</span><span style="color: var(--text2);">$2,41</span>
+          </div>
+          <div style="font-size: 11px; color: var(--dim2); margin-top: 12px; font-family: 'JetBrains Mono', monospace;">puedes cerrar la pestaña, sigue en segundo plano</div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ esVacio }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 316px; border: 1px solid var(--line2); border-radius: 12px; background: var(--glass); backdrop-filter: blur(14px); box-shadow: 0 24px 60px rgba(0,0,0,.28); padding: 18px;">
+          <div style="font-size: 13px; font-weight: 500;">Zona sin prospectos válidos</div>
+          <div style="font-size: 11.5px; color: var(--muted); margin-top: 7px; line-height: 1.55;">Los 34 negocios de esta zona quedaron descartados. Los verás en gris con su motivo si activas mostrar descartados.</div>
+          <button style="height: 32px; padding: 0 13px; border: none; border-radius: 8px; background: var(--btn-bg); color: var(--btn-fg); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; margin-top: 14px; white-space: nowrap;" style-hover="background: var(--btn-bg-h);">Ampliar el radio y reescanear</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ esError }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 330px; border: 1px solid var(--line2); border-left: 3px solid var(--crit); border-radius: 12px; background: var(--glass); backdrop-filter: blur(14px); box-shadow: 0 24px 60px rgba(0,0,0,.28); padding: 18px;">
+          <div style="font-size: 13px; font-weight: 500; color: var(--crit);">Escaneo detenido</div>
+          <div style="font-size: 11.5px; color: var(--muted); margin-top: 7px; line-height: 1.55;">Google Places devolvió OVER_QUERY_LIMIT en el negocio 61 de 96. Lo auditado está guardado y el resto queda en cola.</div>
+          <div style="display: flex; gap: 8px; margin-top: 14px;">
+            <button style="height: 32px; padding: 0 13px; border: none; border-radius: 8px; background: var(--btn-bg); color: var(--btn-fg); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap;" style-hover="background: var(--btn-bg-h);">Ver los 61 auditados</button>
+            <button style="height: 32px; padding: 0 12px; border: 1px solid var(--line2); border-radius: 8px; background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; white-space: nowrap;" style-hover="background: var(--chip);">Ajustes de cuota</button>
+          </div>
+        </div>
+      </sc-if>
+      <div style="position: absolute; bottom: 14px; left: 14px; border: 1px solid var(--line2); border-radius: 10px; background: var(--glass2); backdrop-filter: blur(10px); padding: 10px 12px; display: flex; gap: 15px;">
+        <sc-for list="{{ legend }}" as="l" hint-placeholder-count="4">
+          <div style="display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--muted); white-space: nowrap;">
+            <span style="width: 9px; height: 9px; border-radius: 99px; background: {{ l.color }}; opacity: {{ l.opacity }};"></span>{{ l.label }}
+          </div>
+        </sc-for>
+      </div>
+    </main>
+
+    <aside style="width: 372px; flex: none; border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0;">
+      <div style="padding: 15px; border-bottom: 1px solid var(--line);">
+        <div style="display: flex; align-items: start; gap: 12px;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 15.5px; font-weight: 700; letter-spacing: -0.015em;">Coral Ridge Millwork</div>
+            <div style="font-size: 11.5px; color: var(--dim); margin-top: 3px;">Millwork y cabinetry · 8350 NW 30th Terrace, Doral</div>
+          </div>
+          <div style="flex: none; text-align: right;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 23px; font-weight: 500; color: var(--accent); line-height: 1;">91</div>
+            <div style="font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--dim2); margin-top: 4px;">Score</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 12px; font-size: 11.5px; color: var(--muted); flex-wrap: wrap;">
+          <span>★ <span style="color: var(--text);">4,7</span> · 84 Google</span>
+          <span style="color: var(--dim3);">|</span>
+          <span>Houzz <span style="color: var(--text);">4,9</span> · 31</span>
+          <span style="color: var(--dim3);">|</span>
+          <span>~45 empleados</span>
+        </div>
+        <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center;">
+          <div style="height: 22px; padding: 0 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); font-size: 11px; display: flex; align-items: center;">Encaje ICP alto</div>
+          <div style="height: 22px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--line2); color: var(--muted); font-size: 11px; display: flex; align-items: center;">Creciendo · 2ª nave 2025</div>
+        </div>
+      </div>
+
+      <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 15px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim);">Oportunidad por rama</div>
+          <div style="font-size: 11px; color: var(--dim2); font-family: 'JetBrains Mono', monospace;">11 hallazgos</div>
+        </div>
+
+        <sc-for list="{{ branches }}" as="br" hint-placeholder-count="3">
+          <div style="border: 1px solid var(--line2); border-radius: 11px; background: var(--card); overflow: hidden; flex: none;">
+            <div style="padding: 11px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line);">
+              <span style="width: 8px; height: 8px; border-radius: 99px; background: {{ br.color }};"></span>
+              <div style="font-size: 12.5px; font-weight: 500;">{{ br.name }}</div>
+              <div style="font-size: 11px; color: var(--dim); font-family: 'JetBrains Mono', monospace;">{{ br.count }}</div>
+              <div style="margin-left: auto; display: flex; align-items: center; gap: 9px;">
+                <span style="font-size: 11.5px; font-family: 'JetBrains Mono', monospace; color: var(--text);">{{ br.ticket }}</span>
+                <span style="font-size: 11px; font-family: 'JetBrains Mono', monospace; color: {{ br.color }};">{{ br.score }}</span>
+              </div>
+            </div>
+            <div style="padding: 4px 0;">
+              <sc-for list="{{ br.items }}" as="it" hint-placeholder-count="3">
+                <div onClick="{{ it.onClick }}" style="padding: 8px 12px; display: flex; gap: 9px; align-items: start; cursor: pointer;" style-hover="background: var(--hover);">
+                  <span style="width: 6px; height: 6px; flex: none; border-radius: 99px; background: {{ it.sevColor }}; margin-top: 5px;"></span>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 12px; color: var(--text); line-height: 1.35;">{{ it.title }}</div>
+                    <div style="font-size: 10.5px; color: var(--dim); margin-top: 2px; font-family: 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ it.evidence }}</div>
+                  </div>
+                  <div style="flex: none; height: 18px; padding: 0 6px; border-radius: 5px; background: {{ it.verdictBg }}; color: {{ it.verdictFg }}; font-size: 10px; display: flex; align-items: center;">{{ it.verdict }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+
+        <div style="border: 1px solid var(--line2); border-radius: 11px; background: var(--card); padding: 12px;">
+          <div style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim);">Propuesta sugerida</div>
+          <div style="font-size: 12.5px; margin-top: 8px; line-height: 1.5; color: var(--text2);">Fase 1: 8 renders de producto para el catálogo. Fase 2: web bilingüe con fichas de modelo y cotizador. Branding después.</div>
+          <div style="display: flex; gap: 14px; margin-top: 10px; font-size: 11.5px; color: var(--muted); flex-wrap: wrap;">
+            <span>Ticket est. <span style="color: var(--text); font-family: 'JetBrains Mono', monospace;">$34.000</span></span>
+            <span>Confianza <span style="color: var(--accent);">alta</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex: none; border-top: 1px solid var(--line); padding: 11px 15px; display: flex; gap: 8px;">
+        <button onClick="{{ openDossier }}" style="flex: 1; height: 35px; border: none; border-radius: 8px; background: var(--btn-bg); color: var(--btn-fg); font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap;" style-hover="background: var(--btn-bg-h);">Abrir expediente</button>
+        <button style="flex: none; height: 35px; padding: 0 12px; border: 1px solid var(--line2); border-radius: 8px; background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 12.5px; cursor: pointer; white-space: nowrap;" style-hover="background: var(--chip);">Generar propuesta</button>
+      </div>
+    </aside>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isExpediente }}" hint-placeholder-val="{{ false }}">
+  <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; background: var(--bg);">
+    <div style="flex: none; border-bottom: 1px solid var(--line); background: var(--panel); padding: 16px 24px; display: flex; align-items: start; gap: 24px;">
+      <div onClick="{{ openMapa }}" style="flex: none; width: 30px; height: 30px; border: 1px solid var(--line2); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-top: 3px;" style-hover="background: var(--chip);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M15 6l-6 6 6 6" /></svg>
+      </div>
+      <div style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="font-size: 21px; font-weight: 700; letter-spacing: -0.02em;">Coral Ridge Millwork</div>
+          <div style="height: 21px; padding: 0 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); font-size: 11px; display: flex; align-items: center;">Encaje ICP alto</div>
+        </div>
+        <div style="font-size: 12.5px; color: var(--dim); margin-top: 5px;">Millwork y cabinetry a medida · Doral, Miami-Dade · <a href="#1a">coralridgemillwork.com</a> · ~45 empleados · verificado 14 ago 2026</div>
+      </div>
+      <div style="flex: none; display: flex; gap: 28px; align-items: start;">
+        <sc-for list="{{ dossierStats }}" as="s" hint-placeholder-count="4">
+          <div>
+            <div style="font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--dim2);">{{ s.label }}</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 19px; font-weight: 500; color: {{ s.color }}; margin-top: 5px;">{{ s.value }}</div>
+          </div>
+        </sc-for>
+        <button style="height: 34px; padding: 0 14px; border: none; border-radius: 8px; background: var(--btn-bg); color: var(--btn-fg); font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap; margin-top: 8px;" style-hover="background: var(--btn-bg-h);">Generar propuesta</button>
+      </div>
+    </div>
+
+    <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 20px 24px 32px;">
+      <sc-for list="{{ dossier }}" as="sec" hint-placeholder-count="3">
+        <div style="margin-bottom: 26px;">
+          <div style="display: flex; align-items: center; gap: 11px; padding-bottom: 10px; border-bottom: 1px solid var(--line);">
+            <span style="width: 9px; height: 9px; border-radius: 99px; background: {{ sec.color }};"></span>
+            <div style="font-size: 14px; font-weight: 700; letter-spacing: -0.01em;">{{ sec.name }}</div>
+            <div style="font-size: 11.5px; color: var(--dim); font-family: 'JetBrains Mono', monospace;">{{ sec.count }} hallazgos</div>
+            <div style="margin-left: auto; display: flex; gap: 18px; font-size: 11.5px; color: var(--muted);">
+              <span>Ticket est. <span style="color: var(--text); font-family: 'JetBrains Mono', monospace;">{{ sec.ticket }}</span></span>
+              <span>Score rama <span style="font-family: 'JetBrains Mono', monospace; color: {{ sec.color }};">{{ sec.score }}</span></span>
+            </div>
+          </div>
+
+          <sc-for list="{{ sec.findings }}" as="f" hint-placeholder-count="3">
+            <div style="display: grid; grid-template-columns: 1fr 496px; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line-soft);">
+              <div style="min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="height: 19px; padding: 0 7px; border-radius: 5px; background: {{ f.verdictBg }}; color: {{ f.verdictFg }}; font-size: 10px; letter-spacing: .04em; display: flex; align-items: center;">{{ f.verdict }}</div>
+                  <div style="height: 19px; padding: 0 7px; border-radius: 5px; border: 1px solid var(--line2); color: var(--muted); font-size: 10px; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace;">{{ f.sev }}</div>
+                </div>
+                <div style="font-size: 15px; font-weight: 500; margin-top: 9px; letter-spacing: -0.01em; text-wrap: pretty;">{{ f.title }}</div>
+                <div style="font-size: 12.5px; color: var(--muted); margin-top: 6px; line-height: 1.55; max-width: 620px; text-wrap: pretty;">{{ f.desc }}</div>
+                <div style="margin-top: 12px; border-left: 2px solid {{ sec.color }}; padding: 2px 0 2px 11px;">
+                  <div style="font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim2);">Lo que gana el cliente</div>
+                  <div style="font-size: 12.5px; color: var(--text2); margin-top: 5px; line-height: 1.5; max-width: 580px; text-wrap: pretty;">{{ f.gain }}</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 13px;">
+                  <button style="height: 28px; padding: 0 10px; border: 1px solid var(--line2); border-radius: 7px; background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; gap: 6px;" style-hover="background: var(--chip);">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3-6.7M21 4v5h-5" /></svg>
+                    Reverificar con IA
+                  </button>
+                  <span style="font-size: 10.5px; color: var(--dim2); font-family: 'JetBrains Mono', monospace;">{{ f.checked }}</span>
+                </div>
+              </div>
+
+              <div style="border: 1px solid var(--line2); border-radius: 11px; background: var(--card2); overflow: hidden;">
+                <div style="padding: 9px 11px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; background: var(--card);">
+                  <span style="font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim2); flex: none;">Evidencia</span>
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ f.url }}</span>
+                  <span style="margin-left: auto; flex: none; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--dim2);">{{ f.layer }}</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 178px; gap: 11px; padding: 11px;">
+                  <div style="min-width: 0;">
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); line-height: 1.55; background: var(--inset); border: 1px solid var(--line2); border-radius: 8px; padding: 9px 10px; white-space: pre-wrap;">{{ f.quote }}</div>
+                    <div style="display: flex; gap: 12px; margin-top: 9px; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--dim2); flex-wrap: wrap;">
+                      <span>{{ f.date }}</span>
+                      <span>{{ f.method }}</span>
+                    </div>
+                  </div>
+                  <div style="flex: none;">
+                    <div style="position: relative; height: 104px; border-radius: 8px; border: 1px solid var(--line2); background: var(--inset); overflow: hidden;">
+                      <div style="padding: 7px; display: grid; gap: 5px;">
+                        <div style="height: 14px; border-radius: 2px; background: var(--line);"></div>
+                        <div style="height: 30px; border-radius: 2px; background: var(--block);"></div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                          <div style="height: 22px; border-radius: 2px; background: var(--block);"></div>
+                          <div style="height: 22px; border-radius: 2px; background: var(--block); border: 1px dashed {{ sec.color }};"></div>
+                        </div>
+                      </div>
+                      <div style="position: absolute; left: 7px; bottom: 6px; font-size: 9px; font-family: 'JetBrains Mono', monospace; color: var(--dim2);">captura · {{ f.shot }}</div>
+                    </div>
+                    <div style="font-size: 10px; color: var(--dim2); margin-top: 6px; font-family: 'JetBrains Mono', monospace;">ver a tamaño completo</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+
+      <div style="border: 1px solid var(--line2); border-radius: 12px; background: var(--card); padding: 16px 18px; display: flex; gap: 28px; align-items: center;">
+        <div style="flex: 1;">
+          <div style="font-size: 13px; font-weight: 500;">Viabilidad comercial</div>
+          <div style="font-size: 12.5px; color: var(--muted); margin-top: 6px; line-height: 1.55; max-width: 780px; text-wrap: pretty;">Empresa independiente en crecimiento: segunda nave en Medley desde 2025 y ofertas de empleo activas para instaladores. No es franquicia y no tiene agencia interna: el sitio lo mantiene el sobrino del dueño según una reseña respondida en Houzz. Prospecto recomendado.</div>
+        </div>
+        <div style="flex: none; display: flex; gap: 8px;">
+          <button style="height: 34px; padding: 0 14px; border: none; border-radius: 8px; background: var(--btn-bg); color: var(--btn-fg); font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap;" style-hover="background: var(--btn-bg-h);">Añadir al pipeline</button>
+          <button style="height: 34px; padding: 0 14px; border: 1px solid var(--line2); border-radius: 8px; background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 12.5px; cursor: pointer; white-space: nowrap;" style-hover="background: var(--chip);">Descartar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isRevision }}" hint-placeholder-val="{{ false }}">
+  <div style="flex: 1; display: flex; min-height: 0;">
+    <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0;">
+      <div style="flex: none; height: 46px; border-bottom: 1px solid var(--line); background: var(--panel); display: flex; align-items: center; gap: 8px; padding: 0 20px;">
+        <div style="font-size: 12.5px; font-weight: 500; white-space: nowrap;">Cola de revisión</div>
+        <div style="font-size: 11.5px; color: var(--dim); font-family: 'JetBrains Mono', monospace; white-space: nowrap;">23 pendientes · 4 prospectos</div>
+        <div style="margin-left: 18px; height: 28px; border: 1px solid var(--line2); border-radius: 8px; display: flex; align-items: center; padding: 2px; gap: 2px;">
+          <div style="height: 22px; padding: 0 10px; border-radius: 6px; background: var(--chip); font-size: 11.5px; display: flex; align-items: center; white-space: nowrap;">Pendientes</div>
+          <div style="height: 22px; padding: 0 10px; border-radius: 6px; font-size: 11.5px; color: var(--muted); display: flex; align-items: center; cursor: pointer; white-space: nowrap;" style-hover="color: var(--text);">Matizados</div>
+          <div style="height: 22px; padding: 0 10px; border-radius: 6px; font-size: 11.5px; color: var(--muted); display: flex; align-items: center; cursor: pointer; white-space: nowrap;" style-hover="color: var(--text);">Todos</div>
+        </div>
+        <div style="margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 11px; color: var(--dim2); font-family: 'JetBrains Mono', monospace; white-space: nowrap;">
+          <span>C confirmar</span><span>M matizar</span><span>D descartar</span><span>↑↓ navegar</span>
+        </div>
+      </div>
+
+      <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 22px 24px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="font-size: 11.5px; color: var(--muted);">Coral Ridge Millwork</div>
+          <span style="color: var(--dim3);">·</span>
+          <div style="height: 19px; padding: 0 7px; border-radius: 5px; background: var(--b1-soft); color: var(--b1); font-size: 10px; display: flex; align-items: center;">Visualización arquitectónica</div>
+          <div style="height: 19px; padding: 0 7px; border-radius: 5px; border: 1px solid var(--line2); color: var(--muted); font-size: 10px; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace;">Crítico</div>
+          <div style="margin-left: auto; font-size: 11px; color: var(--dim2); font-family: 'JetBrains Mono', monospace;">hallazgo 1 de 23</div>
+        </div>
+
+        <div style="font-size: 21px; font-weight: 700; letter-spacing: -0.02em; margin-top: 14px; max-width: 780px; text-wrap: pretty;">6 de los 14 modelos del catálogo no tienen ni una imagen</div>
+        <div style="font-size: 13px; color: var(--muted); margin-top: 9px; line-height: 1.6; max-width: 720px; text-wrap: pretty;">Las fichas de Belmont, Sabal, Coconut Grove Slab, Weston, Riverside y Bay Panel muestran el marcador de imagen ausente. Los seis son líneas de gama alta con precio bajo consulta.</div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px;">
+          <div style="border: 1px solid var(--line2); border-radius: 11px; background: var(--card); overflow: hidden;">
+            <div style="padding: 9px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim2);">Evidencia · HTML servido</span>
+              <span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">/models/belmont</span>
+            </div>
+            <div style="padding: 12px;">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); line-height: 1.6; background: var(--inset); border: 1px solid var(--line2); border-radius: 8px; padding: 10px; white-space: pre-wrap;">&lt;div class="model-gallery"&gt;&lt;/div&gt;
+&lt;!-- TODO: add product shots --&gt;</div>
+              <div style="display: flex; gap: 12px; margin-top: 9px; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--dim2);">
+                <span>capturado 14 ago 2026 · 09:41</span><span>curl + navegador real</span>
+              </div>
+            </div>
+          </div>
+          <div style="border: 1px solid var(--line2); border-radius: 11px; background: var(--card); overflow: hidden;">
+            <div style="padding: 9px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim2);">Captura</span>
+              <span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--muted);">1440×900 · 14 ago</span>
+            </div>
+            <div style="padding: 12px;">
+              <div style="position: relative; height: 148px; border-radius: 8px; border: 1px solid var(--line2); background: var(--inset); overflow: hidden;">
+                <div style="padding: 10px; display: grid; gap: 7px;">
+                  <div style="height: 16px; border-radius: 3px; background: var(--block);"></div>
+                  <div style="height: 44px; border-radius: 3px; background: var(--block); border: 1px dashed var(--b1); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--dim); font-family: 'JetBrains Mono', monospace;">imagen ausente</div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                    <div style="height: 26px; border-radius: 3px; background: var(--block);"></div>
+                    <div style="height: 26px; border-radius: 3px; background: var(--block);"></div>
+                    <div style="height: 26px; border-radius: 3px; background: var(--block);"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; border-left: 2px solid var(--b1); padding: 2px 0 2px 12px; max-width: 720px;">
+          <div style="font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim2);">Lo que gana el cliente</div>
+          <div style="font-size: 13px; color: var(--text2); margin-top: 6px; line-height: 1.55; text-wrap: pretty;">Un cliente que no ve el producto no lo pide. Ocho renders cubren el catálogo alto y permiten cotizar sin fabricar muestra.</div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 9px; margin-top: 22px; flex-wrap: wrap;">
+          <button style="height: 36px; padding: 0 16px; border: none; border-radius: 8px; background: var(--btn-bg); color: var(--btn-fg); font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap;" style-hover="background: var(--btn-bg-h);">Confirmar</button>
+          <button style="height: 36px; padding: 0 14px; border: 1px solid var(--line2); border-radius: 8px; background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 12.5px; cursor: pointer; white-space: nowrap;" style-hover="background: var(--chip);">Matizar y editar</button>
+          <button style="height: 36px; padding: 0 14px; border: 1px solid var(--line2); border-radius: 8px; background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 12.5px; cursor: pointer; white-space: nowrap;" style-hover="background: var(--chip);">Descartar</button>
+          <button style="height: 36px; padding: 0 14px; border: 1px solid var(--line2); border-radius: 8px; background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 7px; white-space: nowrap;" style-hover="background: var(--chip);">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3-6.7M21 4v5h-5" /></svg>
+            Reverificar con IA
+          </button>
+          <span style="font-size: 11px; color: var(--dim2); font-family: 'JetBrains Mono', monospace; margin-left: 6px;">se guarda y salta al siguiente</span>
+        </div>
+      </div>
+    </div>
+
+    <aside style="width: 328px; flex: none; border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0;">
+      <div style="flex: none; padding: 13px 15px; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; justify-content: space-between;">
+        <div style="font-size: 12.5px; font-weight: 500;">Siguientes en la cola</div>
+        <div style="font-size: 11px; color: var(--dim); font-family: 'JetBrains Mono', monospace;">23</div>
+      </div>
+      <div style="flex: 1; overflow-y: auto; min-height: 0;">
+        <sc-for list="{{ queue }}" as="q" hint-placeholder-count="8">
+          <div style="padding: 11px 15px; border-bottom: 1px solid var(--line-soft); cursor: pointer; background: {{ q.bg }};" style-hover="background: var(--hover);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="width: 6px; height: 6px; flex: none; border-radius: 99px; background: {{ q.sevColor }};"></span>
+              <div style="font-size: 11px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ q.prospect }}</div>
+              <div style="margin-left: auto; flex: none; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: {{ q.branchColor }};">{{ q.branch }}</div>
+            </div>
+            <div style="font-size: 12px; color: var(--text); margin-top: 5px; line-height: 1.35;">{{ q.title }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="flex: none; border-top: 1px solid var(--line); padding: 10px 15px; display: flex; justify-content: space-between; font-size: 11px; color: var(--dim);">
+        <span>Revisados hoy</span><span style="font-family: 'JetBrains Mono', monospace; color: var(--text2);">31</span>
+      </div>
+    </aside>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isPropuestas }}" hint-placeholder-val="{{ false }}">
+  <div style="flex: 1; display: flex; min-height: 0;">
+    <aside style="width: 396px; flex: none; border-right: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0;">
+      <div style="flex: none; padding: 15px; border-bottom: 1px solid var(--line);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="font-size: 12.5px; font-weight: 500; flex: 1; min-width: 0;">Propuesta · Coral Ridge Millwork</div>
+          <div style="flex: none; height: 26px; border: 1px solid var(--line2); border-radius: 7px; display: flex; align-items: center; padding: 2px; gap: 2px;">
+            <div onClick="{{ setConfigurar }}" style="height: 20px; padding: 0 9px; border-radius: 5px; font-size: 11px; display: flex; align-items: center; cursor: pointer; background: {{ modeConfBg }}; color: {{ modeConfFg }};">Configurar</div>
+            <div onClick="{{ setEditar }}" style="height: 20px; padding: 0 9px; border-radius: 5px; font-size: 11px; display: flex; align-items: center; cursor: pointer; background: {{ modeEditBg }}; color: {{ modeEditFg }};">Editar</div>
+          </div>
+        </div>
+        <div style="font-size: 11.5px; color: var(--dim); margin-top: 4px;">Borrador · 9 hallazgos confirmados disponibles</div>
+        <div style="display: flex; gap: 6px; margin-top: 11px;">
+          <div style="height: 26px; padding: 0 10px; border-radius: 7px; background: var(--chip); font-size: 11.5px; display: flex; align-items: center; cursor: pointer;">Español</div>
+          <div style="height: 26px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--line2); color: var(--muted); font-size: 11.5px; display: flex; align-items: center; cursor: pointer;" style-hover="color: var(--text);">English</div>
+          <div style="margin-left: auto; height: 26px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--line2); color: var(--muted); font-size: 11.5px; display: flex; align-items: center; gap: 6px; cursor: pointer;" style-hover="color: var(--text);">Plantilla: Diagnóstico</div>
+        </div>
+      </div>
+      <sc-if value="{{ isEditar }}" hint-placeholder-val="{{ false }}">
+      <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 15px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="flex: none; display: flex; align-items: baseline; justify-content: space-between;">
+          <div style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim);">Bloques del documento</div>
+          <div style="font-size: 11px; color: var(--dim2); font-family: 'JetBrains Mono', monospace;">5 activos</div>
+        </div>
+        <sc-for list="{{ blocks }}" as="bl" hint-placeholder-count="8">
+          <div style="flex: none; border: 1px solid var(--line2); border-radius: 9px; background: var(--card); padding: 10px 11px; display: flex; align-items: center; gap: 9px; cursor: grab;" style-hover="background: var(--hover);">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--dim3)" stroke-width="2" style="flex: none;"><path d="M8 6h.01M8 12h.01M8 18h.01M16 6h.01M16 12h.01M16 18h.01" /></svg>
+            <span style="width: 6px; height: 6px; flex: none; border-radius: 99px; background: {{ bl.dot }};"></span>
+            <div style="flex: 1; min-width: 0; font-size: 12px; color: {{ bl.color }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ bl.name }}</div>
+            <div style="flex: none; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--dim2);">{{ bl.type }}</div>
+          </div>
+        </sc-for>
+        <div style="flex: none; height: 32px; border: 1px dashed var(--line3); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: var(--dim); cursor: pointer; margin-top: 2px;" style-hover="color: var(--text);">+ Añadir bloque</div>
+        <div style="flex: none; border: 1px solid var(--line2); border-radius: 10px; background: var(--card); padding: 12px; margin-top: 4px;">
+          <div style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim);">Tono del texto</div>
+          <div style="display: flex; gap: 6px; margin-top: 9px;">
+            <div style="height: 25px; padding: 0 10px; border-radius: 7px; background: var(--chip); font-size: 11.5px; display: flex; align-items: center; cursor: pointer;">Directo</div>
+            <div style="height: 25px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--line2); color: var(--muted); font-size: 11.5px; display: flex; align-items: center; cursor: pointer;" style-hover="color: var(--text);">Cercano</div>
+            <div style="height: 25px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--line2); color: var(--muted); font-size: 11.5px; display: flex; align-items: center; cursor: pointer;" style-hover="color: var(--text);">Técnico</div>
+          </div>
+          <div style="font-size: 11.5px; color: var(--muted); margin-top: 10px; line-height: 1.5;">La IA reescribe solo los bloques marcados como texto IA. Los hallazgos y los precios no se tocan.</div>
+        </div>
+      </div>
+      </sc-if>
+      <sc-if value="{{ isConfigurar }}" hint-placeholder-val="{{ true }}">
+      <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 15px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim);">Fases incluidas</div>
+        <sc-for list="{{ phases }}" as="ph" hint-placeholder-count="3">
+          <div style="flex: none; border: 1px solid var(--line2); border-radius: 11px; background: var(--card); overflow: hidden;">
+            <div style="padding: 11px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line);">
+              <div style="width: 15px; height: 15px; flex: none; border-radius: 4px; border: 1px solid {{ ph.boxBorder }}; background: {{ ph.boxBg }}; display: flex; align-items: center; justify-content: center;">
+                <span style="font-size: 9px; color: {{ ph.checkColor }};">{{ ph.check }}</span>
+              </div>
+              <div style="font-size: 12.5px; font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: {{ ph.titleColor }};">{{ ph.name }}</div>
+              <span style="flex: none; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text);">{{ ph.price }}</span>
+            </div>
+            <div style="padding: 8px 12px 10px; display: grid; gap: 5px;">
+              <sc-for list="{{ ph.items }}" as="pi" hint-placeholder-count="2">
+                <div style="display: flex; gap: 8px; align-items: start;">
+                  <span style="width: 5px; height: 5px; flex: none; border-radius: 99px; background: {{ ph.color }}; margin-top: 5px;"></span>
+                  <div style="font-size: 11.5px; color: var(--muted); line-height: 1.4;">{{ pi }}</div>
+                </div>
+              </sc-for>
+              <div style="font-size: 10.5px; color: var(--dim2); font-family: 'JetBrains Mono', monospace; margin-top: 3px;">{{ ph.weeks }}</div>
+            </div>
+          </div>
+        </sc-for>
+        <div style="flex: none; border: 1px solid var(--line2); border-radius: 11px; background: var(--card); padding: 12px;">
+          <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">
+            <span>Subtotal</span><span style="font-family: 'JetBrains Mono', monospace; color: var(--text2);">$34.000</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 7px;">
+            <span>Descuento por paquete</span><span style="font-family: 'JetBrains Mono', monospace; color: var(--text2);">−$2.000</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line);">
+            <span>Total</span><span style="font-family: 'JetBrains Mono', monospace;">$32.000</span>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+      <div style="flex: none; border-top: 1px solid var(--line); padding: 11px 15px; display: flex; gap: 8px;">
+        <button style="flex: 1; height: 35px; border: none; border-radius: 8px; background: var(--btn-bg); color: var(--btn-fg); font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap;" style-hover="background: var(--btn-bg-h);">Enviar por email</button>
+        <button style="flex: none; height: 35px; padding: 0 12px; border: 1px solid var(--line2); border-radius: 8px; background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 12.5px; cursor: pointer; white-space: nowrap;" style-hover="background: var(--chip);">PDF</button>
+      </div>
+    </aside>
+
+    <main style="flex: 1; min-width: 0; overflow-y: auto; background: var(--bg); padding: 26px 0;">
+      <sc-if value="{{ isEditar }}" hint-placeholder-val="{{ false }}">
+      <div style="width: 720px; margin: 0 auto 14px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line2); border-radius: 9px; background: var(--panel); padding: 7px 9px;">
+        <div style="height: 26px; padding: 0 9px; border-radius: 6px; font-size: 11.5px; color: var(--text2); display: flex; align-items: center; cursor: pointer; font-weight: 700;" style-hover="background: var(--chip);">H</div>
+        <div style="height: 26px; padding: 0 9px; border-radius: 6px; font-size: 11.5px; color: var(--text2); display: flex; align-items: center; cursor: pointer;" style-hover="background: var(--chip);">Párrafo</div>
+        <div style="height: 26px; padding: 0 9px; border-radius: 6px; font-size: 11.5px; color: var(--text2); display: flex; align-items: center; cursor: pointer;" style-hover="background: var(--chip);">Lista</div>
+        <div style="height: 26px; padding: 0 9px; border-radius: 6px; font-size: 11.5px; color: var(--text2); display: flex; align-items: center; cursor: pointer;" style-hover="background: var(--chip);">Cita de evidencia</div>
+        <div style="height: 26px; padding: 0 9px; border-radius: 6px; font-size: 11.5px; color: var(--text2); display: flex; align-items: center; cursor: pointer;" style-hover="background: var(--chip);">Tabla de precios</div>
+        <div style="width: 1px; height: 18px; background: var(--line2); margin: 0 3px;"></div>
+        <div style="height: 26px; padding: 0 10px; border-radius: 6px; font-size: 11.5px; color: var(--accent); display: flex; align-items: center; gap: 6px; cursor: pointer;" style-hover="background: var(--accent-soft);">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" /></svg>
+          Reescribir con IA
+        </div>
+        <div style="margin-left: auto; font-size: 10.5px; color: var(--dim2); font-family: 'JetBrains Mono', monospace; white-space: nowrap;">guardado hace 12 s</div>
+      </div>
+      </sc-if>
+      <div style="width: 720px; margin: 0 auto; background: var(--panel); border: 1px solid var(--line2); border-radius: 4px; box-shadow: 0 18px 50px rgba(0,0,0,.18); padding: 52px 56px;">
+        <div style="display: flex; align-items: start; justify-content: space-between;">
+          <div>
+            <div style="font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim);">Borsoga Studio · Miami</div>
+            <div style="font-size: 27px; font-weight: 700; letter-spacing: -0.025em; margin-top: 12px; line-height: 1.15;">Diagnóstico digital<br />Coral Ridge Millwork</div>
+          </div>
+          <div style="width: 30px; height: 30px; border-radius: 8px; background: var(--accent); display: flex; align-items: center; justify-content: center; color: var(--accent-ink); font-weight: 700; font-size: 15px;">B</div>
+        </div>
+        <div style="font-size: 12px; color: var(--dim); margin-top: 16px; font-family: 'JetBrains Mono', monospace;">14 de agosto de 2026 · para Andrés Calderón</div>
+
+        <sc-if value="{{ isEditar }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 22px; display: flex; align-items: center; gap: 8px;">
+          <div style="height: 20px; padding: 0 7px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); font-size: 10px; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace;">Resumen ejecutivo · texto IA</div>
+          <div style="display: flex; gap: 4px; margin-left: auto;">
+            <div style="width: 22px; height: 22px; border: 1px solid var(--line2); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--dim); cursor: pointer;" style-hover="background: var(--chip);">↑</div>
+            <div style="width: 22px; height: 22px; border: 1px solid var(--line2); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--dim); cursor: pointer;" style-hover="background: var(--chip);">↓</div>
+            <div style="width: 22px; height: 22px; border: 1px solid var(--line2); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--dim); cursor: pointer;" style-hover="background: var(--chip);">⋯</div>
+          </div>
+        </div>
+        </sc-if>
+        <div style="font-size: 13.5px; color: var(--text2); line-height: 1.7; margin-top: 12px; padding: 10px 12px; margin-left: -12px; margin-right: -12px; border-radius: 6px; border: {{ editBorder }}; text-wrap: pretty;">Auditamos su presencia digital el 14 de agosto. Encontramos nueve problemas confirmados con evidencia, y tres de ellos están costando solicitudes de presupuesto ahora mismo. Este documento los enumera y propone tres fases para resolverlos por orden de retorno.</div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--line);">
+          <div style="font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim);">Lo más urgente</div>
+          <div style="display: grid; gap: 16px; margin-top: 16px;">
+            <sc-for list="{{ proposalItems }}" as="pit" hint-placeholder-count="3">
+              <div style="display: grid; grid-template-columns: 26px 1fr; gap: 12px;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--dim2); padding-top: 2px;">{{ pit.n }}</div>
+                <div>
+                  <div style="font-size: 14px; font-weight: 500; letter-spacing: -0.01em; text-wrap: pretty;">{{ pit.title }}</div>
+                  <div style="font-size: 12.5px; color: var(--muted); margin-top: 5px; line-height: 1.6; text-wrap: pretty;">{{ pit.body }}</div>
+                  <div style="font-size: 11px; color: var(--dim2); margin-top: 6px; font-family: 'JetBrains Mono', monospace;">{{ pit.evidence }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--line);">
+          <div style="font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim);">Propuesta en tres fases</div>
+          <div style="margin-top: 14px;">
+            <sc-for list="{{ phases }}" as="ph2" hint-placeholder-count="3">
+              <div style="display: flex; align-items: baseline; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--line-soft);">
+                <div style="font-size: 13.5px; font-weight: 500; flex: 1; min-width: 0; color: {{ ph2.titleColor }};">{{ ph2.name }}</div>
+                <div style="font-size: 11.5px; color: var(--dim); font-family: 'JetBrains Mono', monospace; white-space: nowrap;">{{ ph2.weeks }}</div>
+                <div style="font-size: 13.5px; font-family: 'JetBrains Mono', monospace; width: 78px; text-align: right;">{{ ph2.price }}</div>
+              </div>
+            </sc-for>
+            <div style="display: flex; align-items: baseline; gap: 14px; padding: 13px 0 0;">
+              <div style="font-size: 13.5px; font-weight: 700; flex: 1;">Total</div>
+              <div style="font-size: 15px; font-family: 'JetBrains Mono', monospace; font-weight: 500;">$32.000</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 28px; padding: 16px 18px; border-radius: 4px; background: var(--accent-soft);">
+          <div style="font-size: 13px; color: var(--text); line-height: 1.6; text-wrap: pretty;">Siguiente paso: una llamada de treinta minutos para revisar las seis fichas sin imagen y decidir por qué modelos empezar.</div>
+        </div>
+      </div>
+    </main>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isPipeline }}" hint-placeholder-val="{{ false }}">
+  <div style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+    <div style="flex: none; height: 62px; border-bottom: 1px solid var(--line); background: var(--panel); display: flex; align-items: center; padding: 0 24px; gap: 34px;">
+      <sc-for list="{{ pipeStats }}" as="ps" hint-placeholder-count="4">
+        <div>
+          <div style="font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--dim2);">{{ ps.label }}</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 500; color: {{ ps.color }}; margin-top: 4px;">{{ ps.value }}</div>
+        </div>
+      </sc-for>
+      <div style="margin-left: auto; display: flex; gap: 8px;">
+        <div style="height: 30px; padding: 0 12px; border: 1px solid var(--line2); border-radius: 8px; display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); cursor: pointer; white-space: nowrap;" style-hover="color: var(--text);">Responsable: todos</div>
+        <div style="height: 30px; padding: 0 12px; border: 1px solid var(--line2); border-radius: 8px; display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); cursor: pointer; white-space: nowrap;" style-hover="color: var(--text);">Últimos 90 días</div>
+      </div>
+    </div>
+    <div style="flex: 1; min-height: 0; overflow-x: auto; padding: 18px 24px; display: flex; gap: 14px; align-items: stretch;">
+      <sc-for list="{{ pipeCols }}" as="col" hint-placeholder-count="6">
+        <div style="width: 246px; flex: none; display: flex; flex-direction: column; min-height: 0;">
+          <div style="flex: none; display: flex; align-items: center; gap: 8px; padding: 0 2px 10px;">
+            <span style="width: 7px; height: 7px; border-radius: 99px; background: {{ col.color }};"></span>
+            <div style="font-size: 12px; font-weight: 500;">{{ col.name }}</div>
+            <div style="font-size: 11px; color: var(--dim); font-family: 'JetBrains Mono', monospace;">{{ col.count }}</div>
+            <div style="margin-left: auto; font-size: 11px; color: var(--dim2); font-family: 'JetBrains Mono', monospace;">{{ col.value }}</div>
+          </div>
+          <div style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px;">
+            <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="3">
+              <div style="flex: none; border: 1px solid var(--line2); border-radius: 10px; background: var(--card); padding: 11px 12px; cursor: pointer;" style-hover="background: var(--hover);">
+                <div style="display: flex; align-items: start; gap: 9px;">
+                  <div style="font-size: 12.5px; font-weight: 500; flex: 1; min-width: 0; line-height: 1.3;">{{ c.name }}</div>
+                  <div style="flex: none; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: {{ c.scoreColor }};">{{ c.score }}</div>
+                </div>
+                <div style="font-size: 11px; color: var(--dim); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ c.meta }}</div>
+                <div style="display: flex; align-items: center; gap: 7px; margin-top: 10px;">
+                  <div style="width: 19px; height: 19px; flex: none; border-radius: 99px; background: var(--chip); border: 1px solid var(--line2); display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--muted);">{{ c.owner }}</div>
+                  <span style="font-size: 10.5px; color: var(--dim2); font-family: 'JetBrains Mono', monospace;">{{ c.age }}</span>
+                  <span style="margin-left: auto; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text2);">{{ c.ticket }}</span>
+                </div>
+                <sc-if value="{{ c.alert }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size: 10.5px; color: var(--warn); margin-top: 8px; font-family: 'JetBrains Mono', monospace;">{{ c.alert }}</div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isTraza }}" hint-placeholder-val="{{ false }}">
+  <div style="flex: 1; display: flex; min-height: 0;">
+    <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0;">
+      <div style="flex: none; height: 46px; border-bottom: 1px solid var(--line); background: var(--panel); display: flex; align-items: center; gap: 14px; padding: 0 20px;">
+        <div style="font-size: 12.5px; font-weight: 500; white-space: nowrap;">Escaneo #4471</div>
+        <div style="font-size: 11.5px; color: var(--dim); font-family: 'JetBrains Mono', monospace; white-space: nowrap;">Doral + Medley · iniciado 09:12 · en curso</div>
+        <div style="margin-left: auto; display: flex; gap: 20px; font-size: 11.5px; font-family: 'JetBrains Mono', monospace; white-space: nowrap;">
+          <span style="color: var(--dim);">pasos <span style="color: var(--text2);">1.284</span></span>
+          <span style="color: var(--dim);">tokens <span style="color: var(--text2);">4,1 M</span></span>
+          <span style="color: var(--dim);">coste <span style="color: var(--text);">$3,84</span></span>
+          <span style="color: var(--dim);">errores <span style="color: var(--crit);">7</span></span>
+        </div>
+      </div>
+      <div style="flex: none; padding: 10px 20px; border-bottom: 1px solid var(--line); display: flex; gap: 8px; align-items: center;">
+        <div style="height: 26px; padding: 0 10px; border-radius: 7px; background: var(--chip); font-size: 11.5px; display: flex; align-items: center; cursor: pointer; white-space: nowrap;">Todos los pasos</div>
+        <div style="height: 26px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--line2); color: var(--muted); font-size: 11.5px; display: flex; align-items: center; cursor: pointer; white-space: nowrap;" style-hover="color: var(--text);">Solo errores</div>
+        <div style="height: 26px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--line2); color: var(--muted); font-size: 11.5px; display: flex; align-items: center; cursor: pointer; white-space: nowrap;" style-hover="color: var(--text);">Llamadas a IA</div>
+        <div style="margin-left: auto; font-size: 11px; color: var(--dim2); font-family: 'JetBrains Mono', monospace;">se actualiza en vivo</div>
+      </div>
+      <div style="flex: 1; overflow-y: auto; min-height: 0;">
+        <div style="display: grid; grid-template-columns: 86px 1fr 168px 74px 74px 68px 84px; gap: 0; padding: 9px 20px; border-bottom: 1px solid var(--line); font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--dim2); position: sticky; top: 0; background: var(--panel);">
+          <div>Hora</div><div>Paso</div><div>Objetivo</div><div>Estado</div><div>Dur.</div><div>Tokens</div><div style="text-align: right;">Coste</div>
+        </div>
+        <sc-for list="{{ trace }}" as="t" hint-placeholder-count="14">
+          <div style="display: grid; grid-template-columns: 86px 1fr 168px 74px 74px 68px 84px; gap: 0; padding: 9px 20px; border-bottom: 1px solid var(--line-soft); font-family: 'JetBrains Mono', monospace; font-size: 11px; align-items: center; cursor: pointer; background: {{ t.bg }};" style-hover="background: var(--hover);">
+            <div style="color: var(--dim2);">{{ t.time }}</div>
+            <div style="color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 12px;">{{ t.step }}</div>
+            <div style="color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 12px;">{{ t.target }}</div>
+            <div style="color: {{ t.statusColor }};">{{ t.status }}</div>
+            <div style="color: var(--muted);">{{ t.dur }}</div>
+            <div style="color: var(--muted);">{{ t.tokens }}</div>
+            <div style="color: var(--muted); text-align: right;">{{ t.cost }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <aside style="width: 388px; flex: none; border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0;">
+      <div style="flex: none; padding: 14px 15px; border-bottom: 1px solid var(--line);">
+        <div style="font-size: 12.5px; font-weight: 500;">audit.branch · renders</div>
+        <div style="font-size: 11px; color: var(--dim); margin-top: 4px; font-family: 'JetBrains Mono', monospace;">09:41:22 · claude · 3,2 s · $0,014</div>
+      </div>
+      <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 15px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="flex: none;">
+          <div style="font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim2); margin-bottom: 7px;">Entrada</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text2); line-height: 1.6; background: var(--inset); border: 1px solid var(--line2); border-radius: 8px; padding: 10px; white-space: pre-wrap;">{
+  "prospect": "coral-ridge-millwork",
+  "pages": 22, "images": 41,
+  "branch": "renders"
+}</div>
+        </div>
+        <div style="flex: none;">
+          <div style="font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim2); margin-bottom: 7px;">Salida</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text2); line-height: 1.6; background: var(--inset); border: 1px solid var(--line2); border-radius: 8px; padding: 10px; white-space: pre-wrap;">{
+  "findings": 4,
+  "verdicts": { "confirmado": 3,
+                "matizado": 1 },
+  "score": 94,
+  "ticket_usd": 18000
+}</div>
+        </div>
+        <div style="flex: none; border: 1px solid var(--line2); border-radius: 10px; background: var(--card); padding: 12px;">
+          <div style="font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim2);">Reintentos y errores</div>
+          <div style="display: grid; gap: 6px; margin-top: 9px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px;">
+            <div style="color: var(--warn);">1 reintento · timeout de captura</div>
+            <div style="color: var(--dim);">robots.txt respetado · 1 req/s</div>
+            <div style="color: var(--dim);">caché Places · 14 aciertos</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isZonas }}" hint-placeholder-val="{{ false }}">
+  <div style="flex: 1; display: flex; min-height: 0;">
+    <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0;">
+      <div style="flex: none; height: 46px; border-bottom: 1px solid var(--line); background: var(--panel); display: flex; align-items: center; gap: 14px; padding: 0 20px;">
+        <div style="font-size: 12.5px; font-weight: 500; white-space: nowrap;">Zonas y escaneos programados</div>
+        <div style="font-size: 11.5px; color: var(--dim); font-family: 'JetBrains Mono', monospace; white-space: nowrap;">6 zonas · 4 activas</div>
+        <div style="margin-left: auto; font-size: 11.5px; color: var(--dim); font-family: 'JetBrains Mono', monospace; white-space: nowrap;">cuota mensual Places <span style="color: var(--text2);">2.140/5.000</span></div>
+      </div>
+      <div style="flex: 1; overflow-y: auto; min-height: 0;">
+        <div style="display: grid; grid-template-columns: 1fr 178px 130px 120px 96px 84px 46px; gap: 0; padding: 9px 20px; border-bottom: 1px solid var(--line); font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--dim2);">
+          <div>Zona</div><div>Sectores</div><div>Programación</div><div>Último escaneo</div><div>Prospectos</div><div>Coste</div><div></div>
+        </div>
+        <sc-for list="{{ zones }}" as="z" hint-placeholder-count="6">
+          <div style="display: grid; grid-template-columns: 1fr 178px 130px 120px 96px 84px 46px; gap: 0; padding: 13px 20px; border-bottom: 1px solid var(--line-soft); align-items: center; cursor: pointer; opacity: {{ z.opacity }};" style-hover="background: var(--hover);">
+            <div style="min-width: 0; padding-right: 14px;">
+              <div style="font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ z.name }}</div>
+              <div style="font-size: 11px; color: var(--dim); margin-top: 3px; font-family: 'JetBrains Mono', monospace;">{{ z.geo }}</div>
+            </div>
+            <div style="font-size: 11.5px; color: var(--muted); padding-right: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ z.sectors }}</div>
+            <div style="font-size: 11.5px; color: {{ z.schedColor }}; font-family: 'JetBrains Mono', monospace;">{{ z.schedule }}</div>
+            <div style="font-size: 11.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace;">{{ z.last }}</div>
+            <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--text2);">{{ z.found }}</div>
+            <div style="font-size: 11.5px; font-family: 'JetBrains Mono', monospace; color: var(--muted);">{{ z.cost }}</div>
+            <div style="display: flex; justify-content: flex-end;">
+              <div style="width: 30px; height: 17px; border-radius: 99px; background: {{ z.toggleBg }}; border: 1px solid {{ z.toggleBorder }}; display: flex; align-items: center; padding: 2px; justify-content: {{ z.toggleJustify }};">
+                <div style="width: 11px; height: 11px; border-radius: 99px; background: {{ z.knob }};"></div>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <aside style="width: 388px; flex: none; border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0;">
+      <div style="flex: none; padding: 14px 15px; border-bottom: 1px solid var(--line); font-size: 12.5px; font-weight: 500;">Nueva zona</div>
+      <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 15px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="flex: none; height: 168px; border: 1px solid var(--line2); border-radius: 10px; overflow: hidden; position: relative; background: var(--map-bg);">
+          <svg viewBox="0 0 360 170" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%;">
+            <rect width="360" height="170" fill="var(--map-bg)" />
+            <path d="M282 -10 C 288 40, 276 90, 284 190 L 380 190 L 380 -10 Z" fill="var(--water)" />
+            <g stroke="var(--road1)" stroke-width="7"><path d="M-10 46 H 280" /><path d="M-10 108 H 278" /><path d="M74 -10 V 180" /><path d="M180 -10 V 180" /></g>
+            <g stroke="var(--road2)" stroke-width="3"><path d="M-10 18 H 280" /><path d="M-10 78 H 280" /><path d="M-10 140 H 278" /><path d="M30 -10 V 180" /><path d="M126 -10 V 180" /><path d="M232 -10 V 180" /></g>
+          </svg>
+          <div style="position: absolute; left: 42%; top: 50%; width: 148px; height: 148px; transform: translate(-50%, -50%); border-radius: 99px; border: 1px dashed var(--accent-line); background: radial-gradient(circle, var(--accent-glow), transparent 70%);"></div>
+          <div style="position: absolute; left: 10px; bottom: 10px; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--dim); background: var(--glass2); padding: 3px 7px; border-radius: 5px;">arrastra para ajustar el radio</div>
+        </div>
+        <sc-for list="{{ zoneForm }}" as="ff" hint-placeholder-count="5">
+          <div style="flex: none;">
+            <div style="font-size: 10.5px; color: var(--dim); margin-bottom: 6px;">{{ ff.label }}</div>
+            <div style="height: 34px; border: 1px solid var(--line2); border-radius: 8px; background: var(--input); display: flex; align-items: center; padding: 0 11px; font-size: 12.5px; color: {{ ff.color }}; justify-content: space-between;">
+              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ ff.value }}</span>
+              <span style="font-size: 10.5px; color: var(--dim2); font-family: 'JetBrains Mono', monospace; flex: none; margin-left: 10px;">{{ ff.hint }}</span>
+            </div>
+          </div>
+        </sc-for>
+        <div style="flex: none; border: 1px solid var(--line2); border-radius: 10px; background: var(--card); padding: 12px;">
+          <div style="font-size: 11.5px; color: var(--muted); line-height: 1.5;">Estimación: <span style="color: var(--text); font-family: 'JetBrains Mono', monospace;">~110 negocios</span>, <span style="color: var(--text); font-family: 'JetBrains Mono', monospace;">$4,20</span> por escaneo. Consume 110 de las 2.860 llamadas restantes.</div>
+        </div>
+      </div>
+      <div style="flex: none; border-top: 1px solid var(--line); padding: 11px 15px; display: flex; gap: 8px;">
+        <button style="flex: 1; height: 35px; border: none; border-radius: 8px; background: var(--btn-bg); color: var(--btn-fg); font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap;" style-hover="background: var(--btn-bg-h);">Guardar y escanear</button>
+        <button style="flex: none; height: 35px; padding: 0 12px; border: 1px solid var(--line2); border-radius: 8px; background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 12.5px; cursor: pointer; white-space: nowrap;" style-hover="background: var(--chip);">Solo guardar</button>
+      </div>
+    </aside>
+  </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1600,&quot;height&quot;:1000},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;oscuro&quot;,&quot;claro&quot;],&quot;default&quot;:&quot;claro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Apariencia&quot;},&quot;paleta&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;bronce&quot;,&quot;tinta&quot;,&quot;pino&quot;],&quot;default&quot;:&quot;tinta&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Apariencia&quot;},&quot;vistaInicial&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mapa&quot;,&quot;expediente&quot;,&quot;revision&quot;,&quot;propuestas&quot;,&quot;pipeline&quot;,&quot;traza&quot;,&quot;zonas&quot;],&quot;default&quot;:&quot;mapa&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vista&quot;},&quot;estado&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;cargando&quot;,&quot;vacío&quot;,&quot;error&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vista&quot;},&quot;mostrarDescartados&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Filtros&quot;},&quot;ventanasEnVivo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Mapa&quot;}}">
+class Component extends DCLogic {
+  state = { view: null, theme: null, propMode: "configurar" };
+
+  renderVals() {
+    const hi = "var(--accent)", mid = "var(--warn)", low = "var(--dim)", crit = "var(--crit)";
+    const R = "var(--b1)", W = "var(--accent)", B = "var(--b3)";
+    const go = v => () => this.setState({ view: v });
+    const view = this.state.view || this.props.vistaInicial || "mapa";
+    const showDiscarded = this.props.mostrarDescartados !== false;
+    const theme = this.state.theme || this.props.modo || "claro";
+    const paleta = this.props.paleta || "tinta";
+
+    const tab = (label, key, count, countColor) => ({
+      label, count, countColor: countColor || "var(--dim2)",
+      bg: view === key ? "var(--chip)" : "transparent",
+      fg: view === key ? "var(--text)" : "var(--muted)",
+      onClick: go(key)
+    });
+
+    const badge = (label, color, n) => ({ label, n, fg: color, bg: color === R ? "var(--b1-soft)" : color === W ? "var(--accent-soft)" : "var(--warn-soft)" });
+
+    const leads = [
+      { name: "Coral Ridge Millwork", meta: "Millwork · Doral", score: 91, ticket: "$34k", branches: [badge("R", R, 4), badge("W", W, 5), badge("B", B, 2)], sel: true },
+      { name: "Vertex Modular Homes", meta: "Casas modulares · Hialeah", score: 88, ticket: "$52k", branches: [badge("R", R, 6), badge("W", W, 3)] },
+      { name: "Casa Blanca Closets", meta: "Closets a medida · Doral", score: 84, ticket: "$21k", branches: [badge("R", R, 3), badge("W", W, 2), badge("B", B, 3)] },
+      { name: "Sunfield Remodeling Group", meta: "Remodelación · Medley", score: 79, ticket: "$28k", branches: [badge("W", W, 4), badge("B", B, 3)] },
+      { name: "Elevare Kitchens & Bath", meta: "Cocinas · Coral Gables", score: 73, ticket: "$19k", branches: [badge("R", R, 2), badge("B", B, 2)] },
+      { name: "Palmetto Custom Cabinetry", meta: "Cabinetry · Hialeah Gardens", score: 66, ticket: "$16k", branches: [badge("W", W, 3)] },
+      { name: "Bayharbor Interiors", meta: "Interiorismo · Miami Beach", score: 61, ticket: "$14k", branches: [badge("B", B, 2), badge("W", W, 1)] },
+      { name: "Closet Systems of Florida", meta: "Franquicia nacional · Doral", score: 22, ticket: "—", branches: [], discardReason: "Descartado: franquicia con web corporativa central" },
+      { name: "Miami Grand Developers", meta: "Desarrollo · Brickell", score: 18, ticket: "—", branches: [], discardReason: "Descartado: agencia interna, 400+ empleados" }
+    ].map((l, i) => ({
+      ...l,
+      scoreColor: l.discardReason ? low : l.score >= 75 ? hi : mid,
+      nameColor: l.discardReason ? "var(--muted)" : "var(--text)",
+      bg: l.sel ? "var(--card)" : "transparent",
+      opacity: l.discardReason ? "0.5" : "1",
+      discardReason: l.discardReason || "",
+      onClick: i === 0 ? go("expediente") : go("mapa")
+    })).filter(l => showDiscarded || !l.discardReason);
+
+    const pin = (x, y, score, tier) => ({
+      x, y, score, opacity: tier === "off" ? "0.45" : "1",
+      bg: tier === "hi" ? "var(--pin-hi)" : tier === "mid" ? "var(--pin-mid)" : "var(--chip)",
+      border: tier === "hi" ? "var(--accent)" : tier === "mid" ? "var(--warn)" : "var(--dim3)",
+      fg: tier === "hi" ? "var(--accent2)" : tier === "mid" ? "var(--warn2)" : "var(--muted)"
+    });
+
+    const finding = (o) => ({
+      sev: o.sev, checked: o.checked || "verificado 14 ago 2026 · 09:41",
+      verdict: o.verdict, method: o.method || "navegador real · 1440×900",
+      verdictBg: o.verdict === "CONFIRMADO" ? "var(--accent-soft)" : o.verdict === "MATIZADO" ? "var(--warn-soft)" : "var(--chip)",
+      verdictFg: o.verdict === "CONFIRMADO" ? "var(--accent)" : o.verdict === "MATIZADO" ? "var(--warn2)" : "var(--muted)",
+      title: o.title, desc: o.desc, gain: o.gain, url: o.url, quote: o.quote,
+      date: o.date || "capturado 14 ago 2026", layer: o.layer, shot: o.shot || "14 ago"
+    });
+
+    const dossier = [
+      {
+        name: "Visualización arquitectónica", color: R, count: 4, ticket: "$18.000", score: 94,
+        findings: [
+          finding({
+            sev: "Crítico", verdict: "CONFIRMADO",
+            title: "6 de los 14 modelos del catálogo no tienen ni una imagen",
+            desc: "Las fichas de Belmont, Sabal, Coconut Grove Slab, Weston, Riverside y Bay Panel muestran el marcador de imagen ausente. Los seis son líneas de gama alta con precio bajo consulta.",
+            gain: "Un cliente que no ve el producto no lo pide. Ocho renders cubren el catálogo alto y permiten cotizar sin fabricar muestra.",
+            url: "coralridgemillwork.com/models/belmont",
+            quote: "<div class=\"model-gallery\"></div>\n<!-- TODO: add product shots -->",
+            layer: "HTML servido = DOM"
+          }),
+          finding({
+            sev: "Alto", verdict: "CONFIRMADO",
+            title: "Promete diseño 3D en el servicio pero no muestra ninguno",
+            desc: "La página de servicios anuncia planificación en 3D como diferenciador. No hay ninguna imagen 3D en todo el dominio: las 41 imágenes son fotos de obra terminada o de taller.",
+            gain: "Cobrar por un servicio que no se demuestra baja el ticket. Con tres piezas 3D el argumento pasa a ser visible en la primera llamada.",
+            url: "coralridgemillwork.com/services",
+            quote: "\"Every project starts with full 3D design planning.\"",
+            layer: "navegador real"
+          }),
+          finding({
+            sev: "Alto", verdict: "MATIZADO",
+            title: "Tres imágenes de portada son de stock",
+            desc: "Coinciden por hash con archivos de un banco de imágenes. Una de ellas es una cocina que no corresponde a ningún proyecto del portfolio.",
+            gain: "La foto genérica iguala a la empresa con su competencia. Producto propio renderizado la separa.",
+            url: "coralridgemillwork.com/ (hero, slide 2-4)",
+            quote: "img/hero-kitchen-2.jpg · hash 8f2c… coincide con banco de stock",
+            layer: "HTML servido", checked: "matizado por JB · 14 ago 2026",
+            method: "comparación de hash + inspección"
+          }),
+          finding({
+            sev: "Medio", verdict: "CONFIRMADO",
+            title: "Dos proyectos en preventa sin ningún visual",
+            desc: "Las entradas Doral Lofts y Medley Showroom aparecen como coming soon desde febrero, con texto y sin imagen ni plano.",
+            gain: "La preventa se vende con imagen. Un tour 360 del showroom permite cerrar visitas sin que la obra esté acabada.",
+            url: "coralridgemillwork.com/projects",
+            quote: "\"Coming soon — check back for photos.\"",
+            layer: "navegador real"
+          })
+        ]
+      },
+      {
+        name: "Diseño y programación web", color: W, count: 5, ticket: "$12.400", score: 88,
+        findings: [
+          finding({
+            sev: "Crítico", verdict: "CONFIRMADO",
+            title: "El formulario de cotización no envía nada",
+            desc: "El envío devuelve 500 desde el endpoint de correo. La página de gracias existe pero no se alcanza. Reproducido tres veces en navegador limpio.",
+            gain: "Cada petición perdida es un proyecto de cinco cifras que nunca llega. Recuperar el formulario paga el trabajo en la primera solicitud.",
+            url: "coralridgemillwork.com/request-quote",
+            quote: "POST /wp-admin/admin-ajax.php → 500\n\"There was a problem with your submission.\"",
+            layer: "navegador real"
+          }),
+          finding({
+            sev: "Crítico", verdict: "CONFIRMADO",
+            title: "Sin versión en español en un mercado donde es la lengua mayoritaria",
+            desc: "El conmutador ES del menú apunta a /es, que devuelve 404. Doral tiene mayoría de población hispanohablante y la propia empresa atiende en español por teléfono.",
+            gain: "Duplica el alcance del sitio sobre el mismo tráfico y alinea la web con cómo ya vende el equipo comercial.",
+            url: "coralridgemillwork.com/es",
+            quote: "HTTP/1.1 404 Not Found\n\"Nothing here.\"",
+            layer: "HTML servido = DOM"
+          }),
+          finding({
+            sev: "Alto", verdict: "CONFIRMADO",
+            title: "El portfolio es invisible para los buscadores",
+            desc: "La galería se monta con JavaScript en el cliente. El HTML servido llega con el contenedor vacío, así que ninguno de los 22 proyectos está indexado.",
+            gain: "Veintidós páginas de proyecto indexables compitiendo por búsquedas de millwork en Miami, sin producir contenido nuevo.",
+            url: "coralridgemillwork.com/portfolio",
+            quote: "curl: <div id=\"pf-root\"></div>  ·  DOM: 22 tarjetas",
+            layer: "HTML servido ≠ DOM"
+          }),
+          finding({
+            sev: "Alto", verdict: "MATIZADO",
+            title: "Texto de plantilla publicado en la página de equipo",
+            desc: "Dos tarjetas del equipo conservan el texto de relleno del tema. La tercera sí está redactada, así que parece un descuido puntual y no un sitio abandonado.",
+            gain: "Los detalles descuidados en la web se leen como descuido en la obra. Corregirlo es barato y protege el precio.",
+            url: "coralridgemillwork.com/about",
+            quote: "\"Lorem ipsum dolor sit amet, consectetur adipiscing elit.\"",
+            layer: "navegador real", checked: "matizado por JB · 14 ago 2026"
+          }),
+          finding({
+            sev: "Medio", verdict: "CONFIRMADO",
+            title: "Dirección y teléfono distintos entre la web y los directorios",
+            desc: "El pie del sitio mantiene la dirección de la primera nave. Google, Houzz y BBB muestran tres combinaciones distintas de teléfono y dirección.",
+            gain: "Datos consistentes mejoran la posición en el mapa local, que es donde busca quien va a contratar cerca.",
+            url: "footer · GBP · houzz.com · bbb.org",
+            quote: "web: (305) 555-0142 · GBP: (786) 555-0110 · BBB: NW 25th St",
+            layer: "cuatro fuentes"
+          })
+        ]
+      },
+      {
+        name: "Branding", color: B, count: 2, ticket: "$3.600", score: 71,
+        findings: [
+          finding({
+            sev: "Alto", verdict: "CONFIRMADO",
+            title: "La marca aparece con tres nombres y dos logos según el canal",
+            desc: "Coral Ridge Millwork en la web, CoralRidge Cabinets en Instagram y Coral Ridge Millwork & Design en Facebook, con dos logotipos distintos y ningún handle coincidente.",
+            gain: "Quien la descubre en redes no la encuentra luego, y las reseñas se reparten entre fichas. Unificar concentra la reputación en un solo sitio.",
+            url: "instagram.com/coralridgecabinets · facebook.com/…",
+            quote: "IG: @coralridgecabinets · FB: Coral Ridge Millwork & Design",
+            layer: "tres canales"
+          }),
+          finding({
+            sev: "Medio", verdict: "CONFIRMADO",
+            title: "Correo de contacto en Gmail y dos reseñas de 1 estrella sin responder",
+            desc: "El contacto comercial es una cuenta de Gmail. Las dos reseñas negativas, ambas sobre plazos de entrega, siguen sin respuesta desde enero.",
+            gain: "Correo de dominio propio y respuestas públicas a las quejas sostienen el precio frente a un comprador que compara tres presupuestos.",
+            url: "coralridgemillwork.com/contact · GBP reseñas",
+            quote: "coralridgemillwork@gmail.com · 2 reseñas ★1 sin respuesta",
+            layer: "navegador real"
+          })
+        ]
+      }
+    ];
+
+    const branches = dossier.map(sec => ({
+      name: sec.name, color: sec.color, count: sec.count, ticket: sec.ticket, score: sec.score,
+      items: sec.findings.slice(0, 3).map(f => ({
+        title: f.title, evidence: f.url, verdict: f.verdict === "CONFIRMADO" ? "CONF." : "MATIZ.",
+        verdictBg: f.verdictBg, verdictFg: f.verdictFg,
+        sevColor: f.sev === "Crítico" ? crit : f.sev === "Alto" ? mid : low,
+        onClick: go("expediente")
+      }))
+    }));
+
+    return {
+      themeClass: (theme === "claro" ? "pc-light" : "pc-dark") + " p-" + paleta,
+      toggleTheme: () => this.setState(st => ({ theme: (st.theme || this.props.modo || "claro") === "claro" ? "oscuro" : "claro" })),
+      isMapa: view === "mapa",
+      isRevision: view === "revision", isPropuestas: view === "propuestas",
+      isConfigurar: this.state.propMode !== "editar",
+      isEditar: this.state.propMode === "editar",
+      setConfigurar: () => this.setState({ propMode: "configurar" }),
+      setEditar: () => this.setState({ propMode: "editar" }),
+      modeConfBg: this.state.propMode !== "editar" ? "var(--chip)" : "transparent",
+      modeConfFg: this.state.propMode !== "editar" ? "var(--text)" : "var(--muted)",
+      modeEditBg: this.state.propMode === "editar" ? "var(--chip)" : "transparent",
+      modeEditFg: this.state.propMode === "editar" ? "var(--text)" : "var(--muted)",
+      editBorder: this.state.propMode === "editar" ? "1px dashed var(--accent)" : "1px dashed transparent",
+      estado: this.props.estado || "normal",
+      esNormal: (this.props.estado || "normal") === "normal",
+      esCargando: this.props.estado === "cargando",
+      esVacio: this.props.estado === "vacío",
+      esError: this.props.estado === "error",
+      noNormal: (this.props.estado || "normal") !== "normal",
+      skeletons: [1, 2, 3, 4, 5, 6, 7],
+      blocks: [
+        { name: "Encabezado y fecha", type: "fijo", on: true },
+        { name: "Resumen ejecutivo", type: "texto IA", on: true },
+        { name: "Lo más urgente · 3 hallazgos", type: "hallazgos", on: true },
+        { name: "Evidencia con capturas", type: "hallazgos", on: false },
+        { name: "Propuesta en tres fases", type: "precios", on: true },
+        { name: "Casos comparables en Doral", type: "texto", on: false },
+        { name: "Siguiente paso", type: "texto IA", on: true },
+        { name: "Condiciones y plazos", type: "fijo", on: false }
+      ].map(b => ({
+        ...b,
+        dot: b.on ? "var(--accent)" : "var(--line3)",
+        color: b.on ? "var(--text)" : "var(--dim)"
+      })),
+      isPipeline: view === "pipeline", isTraza: view === "traza", isZonas: view === "zonas",
+      queue: [
+        { prospect: "Coral Ridge Millwork", title: "6 de los 14 modelos del catálogo no tienen ni una imagen", branch: "R", sev: "Crítico", sel: true },
+        { prospect: "Coral Ridge Millwork", title: "El formulario de cotización no envía nada", branch: "W", sev: "Crítico" },
+        { prospect: "Coral Ridge Millwork", title: "Sin versión en español en un mercado hispanohablante", branch: "W", sev: "Crítico" },
+        { prospect: "Vertex Modular Homes", title: "Los seis modelos se venden solo con planos en PDF", branch: "R", sev: "Crítico" },
+        { prospect: "Vertex Modular Homes", title: "Blog abandonado desde 2023 en portada", branch: "B", sev: "Medio" },
+        { prospect: "Casa Blanca Closets", title: "Instagram y web usan dos logotipos distintos", branch: "B", sev: "Alto" },
+        { prospect: "Casa Blanca Closets", title: "Galería montada con JS, invisible para buscadores", branch: "W", sev: "Alto" },
+        { prospect: "Sunfield Remodeling", title: "Teléfono distinto en cuatro directorios", branch: "W", sev: "Medio" },
+        { prospect: "Elevare Kitchens", title: "Tres fotos de portada son de stock", branch: "R", sev: "Alto" }
+      ].map(q => ({
+        ...q, bg: q.sel ? "var(--hover)" : "transparent",
+        sevColor: q.sev === "Crítico" ? crit : q.sev === "Alto" ? mid : low,
+        branchColor: q.branch === "R" ? R : q.branch === "W" ? W : B
+      })),
+      phases: [
+        { name: "Fase 1 · Renders de catálogo", price: "$18.000", weeks: "5-6 semanas", color: R, titleColor: "var(--text)", on: true,
+          items: ["8 renders de producto para los modelos sin imagen", "3 piezas 3D que respalden el servicio anunciado", "Tour 360 del showroom de Medley"] },
+        { name: "Fase 2 · Web bilingüe y cotizador", price: "$12.400", weeks: "4 semanas", color: W, titleColor: "var(--text)", on: true,
+          items: ["Formulario de cotización con seguimiento y avisos", "Versión en español de todo el sitio", "Portfolio renderizado en servidor, 22 páginas indexables"] },
+        { name: "Fase 3 · Unificación de marca", price: "$3.600", weeks: "3 semanas", color: B, titleColor: "var(--muted)", on: false,
+          items: ["Un nombre y un logo en los tres canales", "Correo de dominio propio", "Plantillas de respuesta a reseñas"] }
+      ].map(p => ({
+        ...p, check: p.on ? "✓" : "",
+        boxBg: p.on ? "var(--accent)" : "transparent",
+        boxBorder: p.on ? "var(--accent)" : "var(--line3)",
+        checkColor: "var(--accent-ink)"
+      })),
+      proposalItems: [
+        { n: "01", title: "Su formulario de presupuesto no envía nada", body: "Comprobamos tres envíos desde navegador limpio: el servidor responde con error y la solicitud no llega a ningún buzón. No sabemos cuántas se han perdido desde entonces.", evidence: "coralridgemillwork.com/request-quote · 14 ago 2026" },
+        { n: "02", title: "Seis modelos de gama alta no tienen ninguna imagen", body: "Belmont, Sabal, Coconut Grove Slab, Weston, Riverside y Bay Panel se listan con precio bajo consulta y sin una sola foto o render. Son justo las líneas con más margen.", evidence: "coralridgemillwork.com/models · 14 ago 2026" },
+        { n: "03", title: "No hay versión en español", body: "El conmutador del menú apunta a una página que no existe, en un mercado donde su equipo comercial ya atiende en español por teléfono.", evidence: "coralridgemillwork.com/es · 404 · 14 ago 2026" }
+      ],
+      pipeStats: [
+        { label: "En pipeline", value: "11", color: "var(--text)" },
+        { label: "Valor abierto", value: "$284k", color: "var(--accent)" },
+        { label: "Propuestas activas", value: "4", color: "var(--text)" },
+        { label: "Tasa de respuesta", value: "38 %", color: "var(--text)" },
+        { label: "Ganado este trimestre", value: "$61k", color: "var(--ok)" }
+      ],
+      pipeCols: [
+        { name: "Detectado", color: "var(--dim2)", count: 4, value: "$96k", cards: [
+          { name: "Vertex Modular Homes", score: 88, meta: "Casas modulares · Hialeah", owner: "JB", age: "hoy", ticket: "$52k" },
+          { name: "Casa Blanca Closets", score: 84, meta: "Closets · Doral", owner: "JB", age: "hace 2 d", ticket: "$21k" },
+          { name: "Palmetto Custom Cabinetry", score: 66, meta: "Cabinetry · Hialeah Gardens", owner: "LM", age: "hace 4 d", ticket: "$16k" },
+          { name: "Bayharbor Interiors", score: 61, meta: "Interiorismo · Miami Beach", owner: "LM", age: "hace 5 d", ticket: "$14k" }
+        ] },
+        { name: "Revisado", color: "var(--b1)", count: 2, value: "$62k", cards: [
+          { name: "Coral Ridge Millwork", score: 91, meta: "Millwork · Doral", owner: "JB", age: "hace 1 h", ticket: "$34k", alert: "9 hallazgos confirmados" },
+          { name: "Sunfield Remodeling Group", score: 79, meta: "Remodelación · Medley", owner: "LM", age: "hace 3 d", ticket: "$28k" }
+        ] },
+        { name: "Propuesta enviada", color: "var(--accent)", count: 3, value: "$74k", cards: [
+          { name: "Elevare Kitchens & Bath", score: 73, meta: "Cocinas · Coral Gables", owner: "JB", age: "hace 6 d", ticket: "$19k", alert: "sin abrir · reenviar" },
+          { name: "Atlantic Stone Interiors", score: 81, meta: "Interiorismo · Aventura", owner: "LM", age: "hace 9 d", ticket: "$31k" },
+          { name: "Kendall Woodworks", score: 69, meta: "Millwork · Kendall", owner: "JB", age: "hace 11 d", ticket: "$24k" }
+        ] },
+        { name: "Reunión", color: "var(--warn)", count: 1, value: "$38k", cards: [
+          { name: "Brickell Closet Co.", score: 86, meta: "Closets · Brickell", owner: "JB", age: "mañana 10:30", ticket: "$38k", alert: "preparar renders de muestra" }
+        ] },
+        { name: "Ganado", color: "var(--ok)", count: 2, value: "$61k", cards: [
+          { name: "Doral Marble & Millwork", score: 84, meta: "Millwork · Doral", owner: "JB", age: "jul 2026", ticket: "$42k" },
+          { name: "Weston Kitchen Studio", score: 72, meta: "Cocinas · Weston", owner: "LM", age: "jun 2026", ticket: "$19k" }
+        ] },
+        { name: "Perdido", color: "var(--dim3)", count: 2, value: "$27k", cards: [
+          { name: "Coconut Grove Cabinets", score: 64, meta: "Cabinetry · Coconut Grove", owner: "LM", age: "may 2026", ticket: "$15k", alert: "trabaja con agencia local" },
+          { name: "Pinecrest Home Design", score: 58, meta: "Interiorismo · Pinecrest", owner: "JB", age: "abr 2026", ticket: "$12k" }
+        ] }
+      ].map(c => ({ ...c, cards: c.cards.map(cd => ({ ...cd, alert: cd.alert || "", scoreColor: cd.score >= 75 ? "var(--accent)" : "var(--muted)" })) })),
+      trace: [
+        { time: "09:12:04", step: "places.nearbySearch", target: "Doral · radius 1200m", status: "ok", dur: "1,9 s", tokens: "—", cost: "$0,32" },
+        { time: "09:12:31", step: "places.details", target: "96 negocios", status: "ok", dur: "42 s", tokens: "—", cost: "$1,63" },
+        { time: "09:13:20", step: "icp.filter", target: "96 → 78", status: "ok", dur: "6,1 s", tokens: "184 k", cost: "$0,21" },
+        { time: "09:14:02", step: "site.discovery", target: "78 dominios", status: "ok", dur: "1,2 m", tokens: "—", cost: "$0,00" },
+        { time: "09:18:44", step: "crawl.page", target: "coralridgemillwork.com/", status: "ok", dur: "940 ms", tokens: "—", cost: "$0,00" },
+        { time: "09:18:51", step: "crawl.page", target: "…/models/belmont", status: "ok", dur: "1,1 s", tokens: "—", cost: "$0,00" },
+        { time: "09:19:03", step: "crawl.page", target: "…/es", status: "404", dur: "310 ms", tokens: "—", cost: "$0,00" },
+        { time: "09:19:12", step: "capture.screenshot", target: "…/models/belmont", status: "reintento", dur: "8,4 s", tokens: "—", cost: "$0,01" },
+        { time: "09:19:34", step: "lighthouse.audit", target: "coralridgemillwork.com", status: "ok", dur: "22 s", tokens: "—", cost: "$0,00" },
+        { time: "09:21:10", step: "social.discovery", target: "IG · FB · LinkedIn", status: "ok", dur: "14 s", tokens: "41 k", cost: "$0,04" },
+        { time: "09:23:47", step: "osint.people", target: "Andrés Calderón", status: "ok", dur: "19 s", tokens: "96 k", cost: "$0,11" },
+        { time: "09:26:02", step: "news.mentions", target: "12 fuentes", status: "ok", dur: "31 s", tokens: "212 k", cost: "$0,24" },
+        { time: "09:31:18", step: "audit.branch · web", target: "coral-ridge-millwork", status: "ok", dur: "4,1 s", tokens: "58 k", cost: "$0,018" },
+        { time: "09:41:22", step: "audit.branch · renders", target: "coral-ridge-millwork", status: "ok", dur: "3,2 s", tokens: "44 k", cost: "$0,014", sel: true },
+        { time: "09:41:29", step: "audit.branch · branding", target: "coral-ridge-millwork", status: "ok", dur: "2,8 s", tokens: "38 k", cost: "$0,012" },
+        { time: "09:41:36", step: "score.compute", target: "coral-ridge-millwork", status: "ok", dur: "120 ms", tokens: "—", cost: "$0,00" },
+        { time: "09:42:01", step: "crawl.page", target: "vertexmodular.com/models", status: "timeout", dur: "30 s", tokens: "—", cost: "$0,00" },
+        { time: "09:42:33", step: "crawl.page", target: "vertexmodular.com/models", status: "ok", dur: "2,2 s", tokens: "—", cost: "$0,00" }
+      ].map(t => ({
+        ...t, bg: t.sel ? "var(--hover)" : "transparent",
+        statusColor: t.status === "ok" ? "var(--ok)" : t.status === "reintento" ? "var(--warn)" : "var(--crit)"
+      })),
+      zones: [
+        { name: "Doral industrial", geo: "25.812 / −80.345 · 1,2 km", sectors: "Millwork, cabinetry, closets", schedule: "cada lunes 06:00", last: "hoy 09:12", found: "96", cost: "$3,84", on: true },
+        { name: "Medley + Hialeah Gardens", geo: "25.856 / −80.325 · 2 km", sectors: "Construcción, remodelación", schedule: "cada 15 días", last: "hace 6 d", found: "74", cost: "$2,90", on: true },
+        { name: "Coral Gables residencial", geo: "25.721 / −80.268 · 1,5 km", sectors: "Cocinas, interiorismo", schedule: "cada mes", last: "hace 12 d", found: "58", cost: "$2,31", on: true },
+        { name: "Fort Lauderdale marina", geo: "26.119 / −80.137 · 2,5 km", sectors: "Millwork náutico, interiorismo", schedule: "cada mes", last: "hace 21 d", found: "41", cost: "$1,64", on: true },
+        { name: "Brickell torres", geo: "25.762 / −80.193 · 900 m", sectors: "Desarrollo, interiorismo", schedule: "pausada", last: "hace 2 m", found: "112", cost: "$4,48", on: false },
+        { name: "West Palm Beach", geo: "26.715 / −80.053 · 3 km", sectors: "Construcción, casas modulares", schedule: "sin programar", last: "nunca", found: "—", cost: "—", on: false }
+      ].map(z => ({
+        ...z, opacity: z.on ? "1" : "0.55",
+        schedColor: z.on ? "var(--text2)" : "var(--dim2)",
+        toggleBg: z.on ? "var(--accent)" : "transparent",
+        toggleBorder: z.on ? "var(--accent)" : "var(--line3)",
+        toggleJustify: z.on ? "flex-end" : "flex-start",
+        knob: z.on ? "var(--accent-ink)" : "var(--dim3)"
+      })),
+      zoneForm: [
+        { label: "Nombre de la zona", value: "Kendall millwork", color: "var(--text)", hint: "" },
+        { label: "Centro", value: "25.679 / −80.354 · Kendall, FL", color: "var(--text)", hint: "mover en el mapa" },
+        { label: "Radio", value: "1,8 km", color: "var(--text)", hint: "0,3 – 5 km" },
+        { label: "Sectores", value: "Millwork, cabinetry, closets, cocinas", color: "var(--text)", hint: "4 de 11" },
+        { label: "Ticket mínimo estimado", value: "$20.000", color: "var(--text)", hint: "ICP" },
+        { label: "Programación", value: "Cada lunes a las 06:00", color: "var(--text)", hint: "cron" }
+      ], isExpediente: view === "expediente",
+      openDossier: go("expediente"), openMapa: go("mapa"),
+      tabs: [
+        tab("Mapa", "mapa"), tab("Revisión", "revision", "23", "var(--accent)"),
+        tab("Expediente", "expediente"), tab("Propuestas", "propuestas", "4"),
+        tab("Pipeline", "pipeline", "11"), tab("Traza", "traza"), tab("Zonas", "zonas")
+      ],
+      leads, branches, dossier,
+      liveWindows: this.props.ventanasEnVivo !== false,
+      pins: ([
+        pin("40%", "34%", 88, "hi"), pin("54%", "27%", 84, "hi"), pin("33%", "56%", 79, "hi"),
+        pin("48%", "44%", 73, "mid"), pin("21%", "44%", 66, "mid"), pin("60%", "50%", 61, "mid"),
+        pin("64%", "35%", 58, "mid"), pin("44%", "66%", 47, "low"), pin("15%", "62%", 22, "off"),
+        pin("72%", "58%", 18, "off"), pin("28%", "70%", 39, "low")
+      ]).filter(p => showDiscarded || p.opacity === "1"),
+      legend: [
+        { color: "var(--accent)", label: "Score 75-100", opacity: "1" },
+        { color: "var(--warn)", label: "50-74", opacity: "1" },
+        { color: "var(--dim2)", label: "Bajo", opacity: "1" },
+        { color: "var(--dim2)", label: "Descartado (en gris, con motivo)", opacity: "0.45" }
+      ],
+      people: [
+        {
+          initials: "AC", name: "Andrés Calderón", role: "Fundador y presidente", conf: "96 %", confColor: "var(--accent)",
+          rows: [
+            { k: "LinkedIn", v: "in/andrescalderonmillwork", color: "var(--muted)" },
+            { k: "Email", v: "a.calderon@coralridge…com", color: "var(--accent)" },
+            { k: "Móvil", v: "+1 (305) 5•• ••42", color: "var(--muted)" },
+            { k: "Señal", v: "busca instaladores · 2ª nave Medley", color: "var(--warn2)" }
+          ]
+        },
+        {
+          initials: "LP", name: "Lourdes Peña", role: "Directora de operaciones", conf: "74 %", confColor: "var(--warn)",
+          rows: [
+            { k: "Instagram", v: "@lou.pena (privado)", color: "var(--muted)" },
+            { k: "Email", v: "inferido: l.pena@coralridge…com", color: "var(--warn2)" },
+            { k: "Rol", v: "aprueba proveedores y compras", color: "var(--muted)" }
+          ]
+        }
+      ],
+      news: [
+        { title: "Coral Ridge abre una segunda nave de 18.000 sq ft en Medley", src: "southfloridabusiness · hace 4 meses", color: "var(--accent)" },
+        { title: "Proveedor de millwork en tres torres de Brickell entregadas en 2025", src: "nota de prensa del contratista · 2025", color: "var(--muted)" },
+        { title: "Dos reseñas de 1 estrella por plazos, sin respuesta desde enero", src: "Google Maps · ene 2026", color: "var(--crit2)" }
+      ],
+      dossierStats: [
+        { label: "Score total", value: "91", color: "var(--accent)" },
+        { label: "Hallazgos", value: "11", color: "var(--text)" },
+        { label: "Confirmados", value: "9", color: "var(--accent)" },
+        { label: "Ticket est.", value: "$34k", color: "var(--text)" }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
