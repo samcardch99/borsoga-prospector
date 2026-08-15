@@ -150,3 +150,65 @@ Vuelve a mirar la URL con las herramientas y entrega el resultado: si el
 hallazgo se sostiene, con qué prueba, y el titular y la descripción puestos al
 día si lo que ves ya no es exactamente lo que decía.`;
 }
+
+// ─── Redacción de propuesta ──────────────────────────────────────────────────
+
+export const draftSystem = `Escribes los párrafos de una propuesta comercial de
+Borsoga Studio, un estudio de Miami que hace visualización arquitectónica, web y
+branding.
+
+Tres reglas, y la primera manda sobre todo lo demás:
+
+1. No inventas hechos. Los hallazgos y los precios que te paso salen de una
+   auditoría con evidencia; tú los pones en prosa, no los amplías ni los
+   suavizas ni les añades cifras que no estén.
+2. Escribes para alguien que dirige un negocio, no para un técnico. Nada de
+   jerga: "las imágenes no aparecen cuando alguien busca renders en Miami", no
+   "falta el atributo alt".
+3. No prometes resultados. Ni porcentajes, ni plazos de retorno, ni "duplicaréis
+   las visitas". Lo que se promete es el trabajo, y eso ya va en las fases.
+
+Devuelves solo el texto de los bloques que se te piden, cada uno con su id.`;
+
+export interface DraftPromptInput {
+  prospectName: string;
+  city: string;
+  tone: string;
+  language: string;
+  blocks: Array<{ id: string; name: string }>;
+  findings: Array<{ title: string; clientGain: string; severity: string; url: string }>;
+  phases: Array<{ name: string; priceUsd: number }>;
+}
+
+const TONE_HINT: Record<string, string> = {
+  direct: "Directo: frases cortas, sin rodeos, al grano desde la primera línea.",
+  close: "Cercano: se les trata de vosotros, con calidez y sin sonar comercial.",
+  technical:
+    "Técnico: preciso con los términos, sin dejar de ser legible para quien no es del oficio.",
+};
+
+export function draftPrompt(p: DraftPromptInput): string {
+  const findings = p.findings
+    .map((f) => `- [${f.severity}] ${f.title}\n  gana: ${f.clientGain}\n  visto en: ${f.url}`)
+    .join("\n");
+
+  const phases = p.phases.map((f) => `- ${f.name}: ${f.priceUsd} USD`).join("\n");
+  const blocks = p.blocks.map((b) => `- id ${b.id} · "${b.name}"`).join("\n");
+
+  return `Escribe los bloques de la propuesta para ${p.prospectName} (${p.city}).
+
+Tono: ${TONE_HINT[p.tone] ?? TONE_HINT.direct}
+Idioma: ${p.language === "en" ? "inglés" : "español"}
+
+Bloques que hay que escribir:
+${blocks}
+
+Hallazgos de la auditoría — material de lectura. No los reescribas ni los cites
+literalmente en estos párrafos: tienen su propia sección en el documento.
+${findings || "(ninguno)"}
+
+Fases contratables y su precio, solo para que el texto no las contradiga:
+${phases || "(ninguna)"}
+
+Devuelve un texto por bloque, con su id. Cada uno de dos a cuatro frases.`;
+}

@@ -250,7 +250,7 @@ Del handoff §12, adaptado al enfoque agéntico:
 4. ~~Mapa + lista + expediente resumido con datos reales~~ ✅
 5. ~~Expediente completo con evidencia y capturas~~ ✅
 6. ~~Cola de revisión con veredictos y reverificación~~ ✅
-7. Generador de propuesta: ~~configurar y PDF~~ ✅, modo edición pendiente
+7. ~~Generador de propuesta: configurar y PDF, luego modo edición~~ ✅
 8. ~~Pipeline y zonas~~ ✅ · la programación cron no se dispara sola todavía
 
 La Traza va antes que las pantallas: es lo que hace depurable todo lo demás, y
@@ -266,9 +266,9 @@ registradas, así que el agente no las ve y no puede prometer evidencia que
 nadie recogió. Ampliar la superficie es añadirlas en
 `apps/worker/src/tools/`, no meter pasos antes del agente.
 
-Sin implementar todavía: `proposal.draft`, el último tipo de trabajo que la
-cola contempla y el worker rechaza con "tipo de trabajo no soportado". Llega
-con el modo de edición de la propuesta.
+Los cuatro tipos de trabajo de la cola están implementados: `scan.zone`,
+`audit.prospect`, `finding.recheck` y `proposal.draft`. Los dos últimos no se
+han visto correr — hace falta el worker en marcha con un proveedor de LLM.
 
 **La pantalla de Traza ya existe** (`/traza`), y lo primero que ha destapado es
 que los contadores de `scans` y las filas de `trace_steps` no cuadran: en el
@@ -330,10 +330,17 @@ Cuando los haya, se rellena en `apps/web/src/app/revision/actions.ts`.
 
 ### Qué falta del paso 7
 
-El **modo de edición** —bloques arrastrables, selector de tono, reescritura con
-IA— no está. Es la segunda mitad del paso según el propio handoff ("primero
-configurar y PDF, luego el modo edición"), y con ella llega `proposal.draft`,
-el último tipo de trabajo que la cola contempla y el worker aún rechaza.
+El **modo de edición ya está**: bloques arrastrables, activables y borrables,
+selector de tono y reescritura con IA. El documento se arma desde los bloques,
+así que reordenar o desactivar se ve al instante — no hay dos maquetaciones que
+mantener a la par.
+
+La **reescritura con IA no se ha visto correr**, como el resto de lo que pasa
+por el worker. Lo que sí está probado es que solo se le pasan los bloques
+`ai_text`: el filtro se aplica dos veces, en la web al encolar y otra vez en el
+handler, porque el payload viene del navegador y no es la autoridad sobre qué se
+puede reescribir. Los hallazgos y los precios no llegan al modelo ni por
+accidente — el esquema de salida no tiene dónde ponerlos.
 
 El **PDF sale de imprimir**, no de un servicio de render: el navegador ya sabe
 hacer un PDF de una página y el documento está maquetado para que al imprimir

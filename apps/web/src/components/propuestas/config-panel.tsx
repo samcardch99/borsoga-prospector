@@ -13,6 +13,7 @@
  */
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { moneyExact } from "@/lib/display";
 import type { LoadedProposal } from "@/lib/proposals";
 import { setDiscount, togglePhase } from "@/app/propuestas/actions";
@@ -20,9 +21,11 @@ import { setDiscount, togglePhase } from "@/app/propuestas/actions";
 export function ConfigPanel({
   proposal,
   totals,
+  editarHref,
 }: {
   proposal: LoadedProposal;
   totals: { subtotal: number; discount: number; total: number };
+  editarHref: string;
 }) {
   const [pending, startTransition] = useTransition();
   const [discount, setDiscountDraft] = useState(String(proposal.discountUsd));
@@ -43,14 +46,14 @@ export function ConfigPanel({
   return (
     <aside className="flex w-[396px] shrink-0 flex-col border-r border-line bg-panel print:hidden">
       <header className="flex shrink-0 items-center gap-2 border-b border-line px-3 py-2.5">
-        <h2 className="text-base2 font-medium">Configurar</h2>
-        <span
-          className="cursor-not-allowed rounded-[6px] px-1.5 py-0.5 text-2xs opacity-45"
-          title="El modo de edición es la segunda mitad del paso 7"
-          style={{ background: "var(--chip)", color: "var(--muted)" }}
+        <h2 className="rounded-[6px] bg-chip px-1.5 py-0.5 text-base2 font-medium">Configurar</h2>
+        <Link
+          href={editarHref}
+          className="rounded-[6px] px-1.5 py-0.5 text-2xs transition-colors hover:bg-hover"
+          style={{ color: "var(--muted)" }}
         >
           Editar
-        </span>
+        </Link>
         <span className="ml-auto font-mono text-2xs" style={{ color: "var(--dim2)" }}>
           {pending ? "guardando…" : "borrador"}
         </span>

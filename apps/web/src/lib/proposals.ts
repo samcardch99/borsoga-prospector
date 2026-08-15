@@ -16,6 +16,7 @@ import {
   db,
   evidence as evidenceTable,
   findings as findingsTable,
+  proposalBlocks,
   proposalPhases,
   proposals,
   prospects as prospectsTable,
@@ -52,6 +53,47 @@ export interface ProposalFinding {
   capturedAt: Date;
 }
 
+export type BlockType = "fixed" | "text" | "ai_text" | "findings" | "pricing";
+
+export interface ProposalBlock {
+  id: string;
+  type: BlockType;
+  name: string;
+  enabled: boolean;
+  order: number;
+  content: string | null;
+}
+
+/**
+ * Los bloques por defecto del documento.
+ *
+ * El reparto de tipos no es decorativo: marca qué puede reescribir la IA y qué
+ * no. Solo los `ai_text` se le pasan al modelo. Los `findings` y el `pricing`
+ * salen de la base y no se tocan nunca — son la parte que hay que poder
+ * defender con la evidencia delante, y un modelo reescribiéndolos convertiría
+ * la propuesta en literatura.
+ */
+const DEFAULT_BLOCKS: Array<Omit<ProposalBlock, "id">> = [
+  { type: "fixed", name: "Membrete", enabled: true, order: 0, content: null },
+  { type: "fixed", name: "Título y fecha", enabled: true, order: 1, content: null },
+  {
+    type: "ai_text",
+    name: "Párrafo de apertura",
+    enabled: true,
+    order: 2,
+    content: null,
+  },
+  { type: "findings", name: "Lo más urgente", enabled: true, order: 3, content: null },
+  { type: "pricing", name: "Cómo lo resolvemos", enabled: true, order: 4, content: null },
+  {
+    type: "ai_text",
+    name: "El siguiente paso",
+    enabled: true,
+    order: 5,
+    content: null,
+  },
+];
+
 export interface LoadedProposal {
   id: string;
   prospectId: string;
@@ -64,6 +106,7 @@ export interface LoadedProposal {
   discountUsd: number;
   createdAt: Date;
   phases: ProposalPhase[];
+  blocks: ProposalBlock[];
   /** Los hallazgos que la propuesta puede citar, ya ordenados por gravedad. */
   findings: ProposalFinding[];
 }
@@ -166,6 +209,19 @@ export async function loadOrCreateProposal(prospectId: string): Promise<LoadedPr
     }
   }
 
+  let blocks = await db
+    .select()
+    .from(proposalBlocks)
+    .where(eq(proposalBlocks.proposalId, proposal.id))
+    .orderBy(asc(proposalBlocks.order));
+
+  if (blocks.length === 0) {
+    blocks = await db
+      .insert(proposalBlocks)
+      .values(DEFAULT_BLOCKS.map((b) => ({ ...b, proposalId: proposal.id })))
+      .returning();
+  }
+
   return {
     id: proposal.id,
     prospectId,
@@ -188,6 +244,16 @@ export async function loadOrCreateProposal(prospectId: string): Promise<LoadedPr
         enabled: p.enabled,
         order: p.order,
         findingIds: p.findingIds,
+      }))
+      .sort((a, b) => a.order - b.order),
+    blocks: blocks
+      .map((b) => ({
+        id: b.id,
+        type: b.type,
+        name: b.name,
+        enabled: b.enabled,
+        order: b.order,
+        content: b.content,
       }))
       .sort((a, b) => a.order - b.order),
     findings: usable,

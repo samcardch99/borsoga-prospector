@@ -181,6 +181,38 @@ export const recheckOutputJsonSchema = (() => {
   return schema as Record<string, unknown>;
 })();
 
+// ─── Redacción de bloques de propuesta ───────────────────────────────────────
+
+/**
+ * La salida de un `proposal.draft`: el texto de los bloques marcados como
+ * "texto IA", y nada más.
+ *
+ * Lo que este esquema NO permite es tan importante como lo que permite. No hay
+ * sitio para hallazgos, ni para precios, ni para fases: esos salen de la base y
+ * el modelo no los toca. Si algún día alguien quiere que la IA "mejore" un
+ * hallazgo, tendrá que cambiar este esquema a propósito, y ese es exactamente
+ * el freno que se busca.
+ */
+export const proposalDraftOutputSchema = z.object({
+  blocks: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        content: z.string().min(1),
+      }),
+    )
+    .min(1),
+});
+
+export type ProposalDraftOutputParsed = z.infer<typeof proposalDraftOutputSchema>;
+
+export const proposalDraftOutputJsonSchema = (() => {
+  const { $schema: _ignored, ...schema } = z.toJSONSchema(proposalDraftOutputSchema, {
+    target: "draft-2020-12",
+  });
+  return schema as Record<string, unknown>;
+})();
+
 // ─── Acciones de revisión ────────────────────────────────────────────────────
 
 export const reviewActionSchema = z
