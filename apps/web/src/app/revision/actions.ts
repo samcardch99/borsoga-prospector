@@ -11,65 +11,15 @@
 
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
-import {
-  db,
-  enqueue,
-  findings as findingsTable,
-  prospects as prospectsTable,
-} from "@borsoga/db";
-import {
-  branchTickets,
-  ticketEstimate,
-  totalScore,
-  type ScorableFinding,
-  type Verdict,
-} from "@borsoga/shared";
-
-/** Mismo mapeo que usa el worker al auditar. */
-const ICP_FIT_SCORE = { high: 100, medium: 60, low: 25 } as const;
+import { db, enqueue, findings as findingsTable, recomputeProspectScore } from "@borsoga/db";
+import type { Verdict } from "@borsoga/shared";
 
 /**
- * Recalcula el score del prospecto a partir de sus hallazgos.
- *
- * Hay que llamarla después de **cualquier** cambio de veredicto: el veredicto
- * es un factor del score (`VERDICT_FACTOR`), así que confirmar o descartar un
- * hallazgo mueve el número que ordena la lista y colorea el marcador. Sin esto,
- * el mapa seguiría mostrando el score que calculó la IA y la revisión humana no
- * tendría efecto visible en ningún sitio.
+ * El recálculo vive en `@borsoga/db` porque la web no es la única que cambia
+ * hallazgos: el worker también, cuando una reverificación mueve una severidad.
+ * Tener aquí una copia propia fue precisamente el fallo que apareció al
+ * ejecutar el worker por primera vez.
  */
-async function recomputeScore(prospectId: string): Promise<void> {
-  const [prospect] = await db
-    .select({ icpFit: prospectsTable.icpFit })
-    .from(prospectsTable)
-    .where(eq(prospectsTable.id, prospectId))
-    .limit(1);
-
-  if (!prospect) return;
-
-  const rows = await db
-    .select({
-      branch: findingsTable.branch,
-      severity: findingsTable.severity,
-      verdict: findingsTable.verdict,
-    })
-    .from(findingsTable)
-    .where(eq(findingsTable.prospectId, prospectId));
-
-  const scored = totalScore(rows as ScorableFinding[], ICP_FIT_SCORE[prospect.icpFit]);
-  const tickets = branchTickets(scored.branchScores);
-
-  await db
-    .update(prospectsTable)
-    .set({
-      score: scored.score,
-      branchScores: scored.branchScores as never,
-      branchTickets: tickets as never,
-      ticketEstimate: ticketEstimate(scored.branchScores),
-      scoreFactors: scored.factors as never,
-    })
-    .where(eq(prospectsTable.id, prospectId));
-}
-
 function refresh(prospectId: string): void {
   revalidatePath("/revision");
   revalidatePath("/");
@@ -114,7 +64,7 @@ export async function setVerdict(
 
   if (!row) return { ok: false, error: "Ese hallazgo ya no existe." };
 
-  await recomputeScore(row.prospectId);
+  await recomputeProspectScore(db, row.prospectId);
   refresh(row.prospectId);
   return { ok: true };
 }
@@ -155,7 +105,7 @@ export async function requestRecheck(findingId: string): Promise<ActionResult> {
     { priority: 10, prospectId: row.prospectId },
   );
 
-  await recomputeScore(row.prospectId);
+  await recomputeProspectScore(db, row.prospectId);
   refresh(row.prospectId);
   return { ok: true };
 }

@@ -18,6 +18,7 @@ import {
   evidence as evidenceTable,
   findings as findingsTable,
   prospects,
+  recomputeProspectScore,
   scans,
 } from "@borsoga/db";
 import {
@@ -203,6 +204,14 @@ export async function recheckFinding(
       excludedFromProposal: !result.stillHolds,
     })
     .where(eq(findingsTable.id, findingId));
+
+  /*
+   * La reverificación puede cambiar la severidad, y la severidad entra en el
+   * score. Sin esto el mapa seguiría pintando el marcador con el color de antes
+   * — que es exactamente lo que pasó la primera vez que este handler corrió de
+   * verdad: subió un hallazgo de `medium` a `high` y el score se quedó en 9.
+   */
+  await recomputeProspectScore(db, prospect.id);
 
   log.info("reverificado", {
     finding: result.title,

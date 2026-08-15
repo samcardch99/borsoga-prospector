@@ -266,9 +266,17 @@ registradas, así que el agente no las ve y no puede prometer evidencia que
 nadie recogió. Ampliar la superficie es añadirlas en
 `apps/worker/src/tools/`, no meter pasos antes del agente.
 
-Los cuatro tipos de trabajo de la cola están implementados: `scan.zone`,
-`audit.prospect`, `finding.recheck` y `proposal.draft`. Los dos últimos no se
-han visto correr — hace falta el worker en marcha con un proveedor de LLM.
+Los cuatro tipos de trabajo de la cola están implementados y **los cuatro se han
+visto correr** con `claude-code-local`: `scan.zone`, `audit.prospect`,
+`finding.recheck` (44 s, escribe evidencia nueva y deja el veredicto en
+`pending`) y `proposal.draft` (12 s, dos bloques redactados).
+
+Ejecutar el worker de verdad destapó un fallo que la revisión de código no había
+visto: una reverificación puede cambiar la severidad de un hallazgo, y la
+severidad entra en el score, pero solo la web recalculaba. El score se quedaba
+con el valor viejo y el mapa pintaba el marcador del color de antes. El
+recálculo vive ahora en `packages/db/src/scoring.ts`, que es el único sitio
+donde lo ven los dos.
 
 **La pantalla de Traza ya existe** (`/traza`), y lo primero que ha destapado es
 que los contadores de `scans` y las filas de `trace_steps` no cuadran: en el
