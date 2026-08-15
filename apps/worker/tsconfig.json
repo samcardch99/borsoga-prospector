@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "noEmit": true,
+    "types": ["node"],
+    // DOM porque `page.evaluate()` de Playwright ejecuta su cuerpo dentro del
+    // navegador: ahí sí existen `document` y `location`, y sin la librería
+    // TypeScript no puede comprobar ese código.
+    "lib": ["ES2023", "DOM"]
+  },
+  "include": ["src/**/*.ts"]
+}

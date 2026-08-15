@@ -39,8 +39,15 @@ export interface ScoreFactor {
   value: number;
 }
 
+/**
+ * Lo único que el score mira de un hallazgo. Se pide esto y no un `Finding`
+ * entero para poder puntuar lo que acaba de devolver el agente, antes de que
+ * tenga id ni fecha de detección.
+ */
+export type ScorableFinding = Pick<Finding, "branch" | "severity" | "verdict">;
+
 /** Score de una rama, 0–100, a partir de sus hallazgos. */
-export function branchScore(findings: readonly Finding[]): number {
+export function branchScore(findings: readonly ScorableFinding[]): number {
   const raw = findings.reduce(
     (sum, f) => sum + SEVERITY_WEIGHT[f.severity] * VERDICT_FACTOR[f.verdict],
     0,
@@ -50,7 +57,7 @@ export function branchScore(findings: readonly Finding[]): number {
 
 /** Score por rama para los tres valores de `Branch`, incluidas las vacías. */
 export function branchScores(
-  findings: readonly Finding[],
+  findings: readonly ScorableFinding[],
 ): Record<Branch, number> {
   return {
     renders: branchScore(findings.filter((f) => f.branch === "renders")),
@@ -72,7 +79,7 @@ export interface TotalScoreResult {
  * @param icpFitScore 0–100, de tamaño, sector, ticket, reputación y crecimiento.
  */
 export function totalScore(
-  findings: readonly Finding[],
+  findings: readonly ScorableFinding[],
   icpFitScore: number,
 ): TotalScoreResult {
   const perBranch = branchScores(findings);

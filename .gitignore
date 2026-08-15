@@ -20,5 +20,7 @@ pnpm-debug.log*
 *.tsbuildinfo
 coverage/
 
-# Capturas del crawler y artefactos de auditoría en local
-/storage/
+# Capturas del crawler y artefactos de auditoría en local. Sin anclar a la
+# raíz: STORAGE_LOCAL_PATH es relativo al cwd, y el worker corre desde
+# apps/worker.
+storage/

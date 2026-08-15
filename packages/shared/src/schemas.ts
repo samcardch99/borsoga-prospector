@@ -130,10 +130,19 @@ export const auditorOutputSchema = z.object({
 
 export type AuditorOutputParsed = z.infer<typeof auditorOutputSchema>;
 
-/** JSON Schema que se le pasa al agente como forma de su salida final. */
-export const auditorOutputJsonSchema = z.toJSONSchema(auditorOutputSchema, {
-  target: "draft-2020-12",
-}) as Record<string, unknown>;
+/**
+ * JSON Schema que se le pasa al agente como forma de su salida final.
+ *
+ * Sin `$schema`: el validador del Agent SDK rechaza el esquema si lleva una
+ * referencia al meta-esquema de draft 2020-12 que no puede resolver, y a un
+ * modelo esa línea no le dice nada. El resto sale tal cual de zod.
+ */
+export const auditorOutputJsonSchema = (() => {
+  const { $schema: _ignored, ...schema } = z.toJSONSchema(auditorOutputSchema, {
+    target: "draft-2020-12",
+  });
+  return schema as Record<string, unknown>;
+})();
 
 // ─── Acciones de revisión ────────────────────────────────────────────────────
 

@@ -18,6 +18,7 @@
  * comprobación nueva, se añade aquí en vez de reintroducir pasos fijos.
  */
 
+import type { ZodRawShape } from "zod";
 import type { Evidence, EvidenceLayer } from "./types";
 
 // ─── Herramientas ────────────────────────────────────────────────────────────
@@ -88,8 +89,13 @@ export type ToolResult =
 export interface AgentTool<TInput = unknown> {
   name: AgentToolName;
   description: string;
-  /** JSON Schema del input, tal como se le presenta al modelo. */
-  inputSchema: Record<string, unknown>;
+  /**
+   * Forma zod del input, una sola fuente de verdad para los dos proveedores:
+   * `claude-code-local` se la pasa tal cual al `tool()` del Agent SDK, y
+   * `anthropic-api` la convierte con `z.toJSONSchema()`. Escribirla dos veces
+   * (zod aquí, JSON Schema allá) es la manera segura de que se separen.
+   */
+  inputSchema: ZodRawShape;
   run(input: TInput, ctx: AgentToolContext): Promise<ToolResult>;
 }
 

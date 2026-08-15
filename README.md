@@ -12,21 +12,41 @@ en `docs/design/prospector-control-center-v3.dc.html` (se abre en el navegador).
 ```
 packages/shared   Contrato de datos, validadores zod, scoring, ICP, capa agéntica
 packages/db       Esquema Postgres (Drizzle), cliente y cola de trabajos
+apps/worker       El agente: herramientas, proveedores de LLM, cola y Traza
 apps/web          Next.js 16 + Tailwind 4 + shadcn/ui
 ```
 
 ## Puesta en marcha
 
 ```bash
+brew install postgresql@17 && brew services start postgresql@17
+createdb -U postgres borsoga_prospector
+
 pnpm install
+pnpm --filter @borsoga/worker exec playwright install chromium
 cp .env.example .env          # rellena DATABASE_URL y GOOGLE_PLACES_API_KEY
 pnpm db:migrate
-pnpm dev                      # http://localhost:3000
+
+pnpm dev                      # web: http://localhost:3000
+pnpm dev:worker               # worker: tira de la cola
 ```
 
 La raíz de `/` es hoy la página de verificación de tokens, no una pantalla del
 producto: sirve para comprobar que los seis temas y los componentes de shadcn
 heredan bien el diseño.
+
+### Meter trabajo en la cola sin interfaz
+
+La vista de Zonas todavía no existe, así que el worker trae una utilidad para
+lanzar trabajo a mano. Se borra el día que exista la pantalla.
+
+```bash
+# Escanear una zona (necesita GOOGLE_PLACES_API_KEY)
+pnpm --filter @borsoga/worker enqueue zone "Doral" miami_dade 25.809 -80.355 8000 kitchens,cabinetry
+
+# Auditar un solo negocio, sin gastar cuota de Places
+pnpm --filter @borsoga/worker enqueue prospect "Nombre" https://ejemplo.com Miami
+```
 
 ---
 
@@ -58,6 +78,25 @@ Consecuencia práctica: un bucle agéntico puede no terminar. Por eso
 `runAgent()` exige `maxTurns` y `maxCostUsd`, y la cola tiene reintentos con
 retroceso exponencial y recogida de trabajos huérfanos (`reapStaleJobs`).
 
+#### El tope de coste no significa lo mismo en los dos proveedores
+
+Con `anthropic-api`, `LLM_MAX_COST_USD_PER_PROSPECT` es dinero: el bucle suma
+tokens a precio de tarifa y corta.
+
+Con `claude-code-local` es una cifra **nocional**. El consumo va contra la
+suscripción, pero el SDK devuelve `total_cost_usd` valorado a precio de tarifa
+y ahí entra la escritura de caché del prefijo del harness — una vez por hora,
+no por prospecto. Medido: ~120.000 tokens de prefijo si el agente hereda las
+skills y los plugins de quien lanza el worker, que a solas ya se comen 1,20 USD
+nocionales. El proveedor los apaga (`skills: []`, `plugins: []`, junto a
+`tools: []` y `settingSources: []`), y no solo por el coste: el auditor tiene
+que comportarse igual en cualquier máquina, no según lo que tenga instalado el
+que lo arranca.
+
+Aun así el número que verás en la Traza es de tarifa, no de factura. El tope
+por defecto es 2,50 USD; por debajo de ~1,50 la primera auditoría de cada hora
+se queda sin presupuesto a mitad y no entrega informe.
+
 ### 2. Tres colisiones de nombre entre el prototipo y shadcn
 
 Documentadas en `apps/web/src/app/globals.css`. El mismo identificador significa
@@ -80,6 +119,15 @@ prototipo (herramienta densa de escritorio). Afecta también a los componentes d
 shadcn, que es lo que se quiere.
 
 ---
+
+## Aviso: los importes de ticket son un marcador de posición
+
+El handoff no trae lista de precios y el contrato pide `branchTickets` y
+`ticketEstimate`, así que `apps/worker/src/pricing.ts` lleva unos importes base
+inventados (renders 8.000, web 14.000, branding 10.000 USD) que escalan con el
+score de la rama. **Sustituidlos por la tarifa real antes de enseñar una cifra a
+nadie de fuera.** Están todos en ese archivo justamente para que cambiarlos sea
+editar tres números; el cálculo sí es deliberado y puede quedarse.
 
 ## Aviso: el contraste de `--dim2` no cumple lo que pide el propio handoff
 
@@ -119,7 +167,7 @@ Del handoff §12, adaptado al enfoque agéntico:
 
 1. ~~Esquema de base de datos y contrato de datos~~ ✅
 2. ~~Tokens de diseño y tema~~ ✅
-3. Worker: herramientas del agente + `LLMProvider` (`claude-code-local`) + Traza
+3. ~~Worker: herramientas del agente + `LLMProvider` + Traza~~ ✅
 4. Mapa + lista + expediente resumido con datos reales
 5. Expediente completo con evidencia y capturas
 6. Cola de revisión con veredictos y reverificación
@@ -128,3 +176,20 @@ Del handoff §12, adaptado al enfoque agéntico:
 
 La Traza va antes que las pantallas: es lo que hace depurable todo lo demás, y
 con un agente que decide por su cuenta hace todavía más falta.
+
+### Qué falta del paso 3
+
+De las diez herramientas que declara el contrato hay cuatro implementadas
+(`places_details`, `fetch_served_html`, `render_dom`, `screenshot`). Las otras
+seis —`crawl_site`, `lighthouse`, `search_web`, `fetch_external_profile`,
+`image_fingerprint` y `probe_contact_form`— están declaradas pero no
+registradas, así que el agente no las ve y no puede prometer evidencia que
+nadie recogió. Ampliar la superficie es añadirlas en
+`apps/worker/src/tools/`, no meter pasos antes del agente.
+
+La Traza escribe en la base y se puede leer con `psql`; la **pantalla** de
+Traza (handoff §6.6) es parte del trabajo de interfaz que viene después.
+
+Sin implementar todavía: `finding.recheck` y `proposal.draft`, los dos tipos de
+trabajo que la cola ya contempla y el worker rechaza con "tipo de trabajo no
+soportado".
