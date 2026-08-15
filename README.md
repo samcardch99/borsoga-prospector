@@ -31,9 +31,26 @@ pnpm dev                      # web: http://localhost:3000
 pnpm dev:worker               # worker: tira de la cola
 ```
 
-La raíz de `/` es hoy la página de verificación de tokens, no una pantalla del
-producto: sirve para comprobar que los seis temas y los componentes de shadcn
-heredan bien el diseño.
+La raíz de `/` es la vista de Mapa: lista, mapa y expediente resumido leyendo
+Postgres. La página de verificación de tokens se mudó a `/tokens`, y sigue
+sirviendo para comprobar que los seis temas y los componentes de shadcn heredan
+bien el diseño.
+
+La selección y los filtros de la lista viven en la URL (`?p=` y `?f=`), no en
+estado de cliente: así recargar no pierde el sitio, el enlace se puede pasar a
+otra persona, y el expediente se renderiza en el servidor con el prospecto ya
+resuelto.
+
+### El mapa necesita dos cosas, no una
+
+Con `GOOGLE_MAPS_BROWSER_KEY` **y** `GOOGLE_MAPS_MAP_ID` se pintan los tiles
+reales. Sin las dos, sale el mapa estilizado del prototipo con los prospectos
+proyectados de verdad sobre el área de búsqueda, y un aviso en pantalla de que
+no son tiles.
+
+El mapId hace falta porque los marcadores llevan el score dentro, así que son
+HTML, y eso en la API de Google obliga a `AdvancedMarker`, que no se pinta sin
+un mapId configurado en la consola. Con la clave sola no basta.
 
 ### Meter trabajo en la cola sin interfaz
 
@@ -168,7 +185,7 @@ Del handoff §12, adaptado al enfoque agéntico:
 1. ~~Esquema de base de datos y contrato de datos~~ ✅
 2. ~~Tokens de diseño y tema~~ ✅
 3. ~~Worker: herramientas del agente + `LLMProvider` + Traza~~ ✅
-4. Mapa + lista + expediente resumido con datos reales
+4. ~~Mapa + lista + expediente resumido con datos reales~~ ✅
 5. Expediente completo con evidencia y capturas
 6. Cola de revisión con veredictos y reverificación
 7. Generador de propuesta: configurar y PDF, luego modo edición
@@ -193,3 +210,26 @@ Traza (handoff §6.6) es parte del trabajo de interfaz que viene después.
 Sin implementar todavía: `finding.recheck` y `proposal.draft`, los dos tipos de
 trabajo que la cola ya contempla y el worker rechaza con "tipo de trabajo no
 soportado".
+
+### Qué falta del paso 4
+
+Las **dos ventanas flotantes en vivo** del handoff §6.1 —"Auditoría web en
+vivo" y "Personas y menciones", ancladas al marcador con la línea de hormigas—
+no están. No es una decisión estética: las tablas `people` y `mentions` no
+tienen todavía quien las escriba. Ninguna de las cuatro herramientas del worker
+recoge directivos ni menciones, y las que lo harían (`search_web` y
+`fetch_external_profile`) son dos de las seis que faltan del paso 3. Construir
+el panel ahora sería pintar un marco vacío.
+
+El **control de zoom** de la esquina inferior derecha solo aparece con el mapa
+real, que trae el suyo. En el lienzo de reserva no hay nada que ampliar, así
+que ese hueco lo ocupa el aviso de que no son tiles.
+
+El **camino del mapa real está sin verificar**: se ha probado a fondo el lienzo
+de reserva, pero no hay `GOOGLE_MAPS_MAP_ID` en este entorno, así que los tiles
+y los `AdvancedMarker` no se han visto funcionando.
+
+Los botones "Abrir expediente", "Generar propuesta", "Escanear zona" y "Dibujar
+área" están visibles y apagados, con la pista de en qué paso llegan. Se dejan
+en su sitio en vez de esconderlos porque son parte del layout que hay que
+recrear, y un hueco cambiaría las medidas de las columnas.
