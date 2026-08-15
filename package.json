@@ -12,6 +12,7 @@
     "dev:worker": "pnpm --filter @borsoga/worker dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r --if-present test",
     "db:generate": "pnpm --filter @borsoga/db generate",
     "db:migrate": "pnpm --filter @borsoga/db migrate",
     "db:studio": "pnpm --filter @borsoga/db studio"

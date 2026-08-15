@@ -28,7 +28,10 @@ cp .env.example .env          # rellena DATABASE_URL y GOOGLE_PLACES_API_KEY
 pnpm db:migrate
 
 pnpm dev                      # web: http://localhost:3000
-pnpm dev:worker               # worker: tira de la cola
+pnpm dev:worker               # worker: tira de la cola y programa las zonas
+
+pnpm typecheck                # los cuatro paquetes
+pnpm test                     # de momento solo la regla de programación
 ```
 
 La raíz de `/` es la vista de Mapa: lista, mapa y expediente resumido leyendo
@@ -374,10 +377,15 @@ igual que los de `BASE_TICKET_USD`. Están juntos en
 
 ### Qué falta del paso 8
 
-La **programación cron no se dispara sola**. Las zonas guardan su expresión y la
-tabla la muestra, pero falta un planificador que encole `scan.zone` a su hora;
-hoy es un proceso que no existe. Escanear a mano desde la tabla sí funciona y
-encola igual que el CLI del worker.
+La **programación cron ya se dispara**, pero solo mientras el worker esté en
+marcha: el planificador vive dentro de él (`apps/worker/src/scheduler.ts`) y no
+como proceso aparte. Un cron del sistema tendría que saber la URL de la base,
+cargar el mismo `.env` y duplicar el encolado; y con el worker apagado
+encolaría trabajos que nadie va a atender.
+
+Las expresiones se leen en **hora de Florida**, no en la del servidor ni en
+UTC. Sin fijarlo, `0 3 * * 1` cambiaría de significado el día que esto se
+despliegue en un servidor en UTC.
 
 Las **tarjetas del kanban no se han visto con datos**: el único prospecto de la
 base está descartado y los descartados no entran al pipeline. Lo verificado son

@@ -105,8 +105,9 @@ export default async function ZonasPage() {
           </table>
 
           <p className="px-3 py-3 text-2xs" style={{ color: "var(--dim2)" }}>
-            Las zonas con programación cron todavía no se disparan solas: hace falta un
-            planificador que encole `scan.zone` a su hora. Escanear a mano sí funciona.
+            Las zonas activas con programación se disparan solas, pero solo mientras el worker
+            esté en marcha: el planificador vive dentro de él. La expresión cron se lee en hora
+            de Florida, no en la del servidor.
           </p>
         </div>
 

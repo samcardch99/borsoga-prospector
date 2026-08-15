@@ -15,6 +15,7 @@ import { draftProposal, type DraftProposalPayload } from "./handlers/draft-propo
 import { recheckFinding, type RecheckFindingPayload } from "./handlers/recheck-finding";
 import { scanZone, type ScanZonePayload } from "./handlers/scan-zone";
 import { errorMessage, log } from "./log";
+import { startScheduler } from "./scheduler";
 import { closeBrowser } from "./tools";
 
 const shutdown = new AbortController();
@@ -64,6 +65,8 @@ async function loop(): Promise<void> {
   }, 5 * 60_000);
   reaper.unref();
 
+  const stopScheduler = startScheduler();
+
   log.info("worker en marcha", {
     id: config.WORKER_ID,
     proveedor: config.LLM_PROVIDER,
@@ -89,6 +92,7 @@ async function loop(): Promise<void> {
   }
 
   clearInterval(reaper);
+  stopScheduler();
 }
 
 function sleep(ms: number): Promise<void> {
