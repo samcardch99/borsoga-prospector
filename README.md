@@ -258,13 +258,20 @@ con un agente que decide por su cuenta hace todavía más falta.
 
 ### Qué falta del paso 3
 
-De las diez herramientas que declara el contrato hay cuatro implementadas
-(`places_details`, `fetch_served_html`, `render_dom`, `screenshot`). Las otras
-seis —`crawl_site`, `lighthouse`, `search_web`, `fetch_external_profile`,
-`image_fingerprint` y `probe_contact_form`— están declaradas pero no
-registradas, así que el agente no las ve y no puede prometer evidencia que
-nadie recogió. Ampliar la superficie es añadirlas en
-`apps/worker/src/tools/`, no meter pasos antes del agente.
+De las diez herramientas que declara el contrato hay seis implementadas:
+`places_details`, `fetch_served_html`, `render_dom`, `screenshot`, `crawl_site`
+y `lighthouse`. Las cuatro que faltan están declaradas pero no registradas, así
+que el agente no las ve y no puede prometer evidencia que nadie recogió.
+
+- `search_web` y `fetch_external_profile` **necesitan credenciales** de un
+  buscador. Sin ellas no hay forma de mirar prensa, directorios ni perfiles.
+- `image_fingerprint` sirve para detectar banco de imágenes, y eso exige poder
+  comparar contra algo de fuera. Sin `search_web` solo podría encontrar
+  duplicados dentro del propio sitio, que es un hallazgo mucho más flojo.
+- `probe_contact_form` **manda un mensaje real a un negocio real**. El handoff
+  §10.3 lo autoriza en modo prueba, pero registrarla significa que el agente
+  decide por su cuenta escribir a un prospecto, sin nadie en medio. Eso es una
+  decisión de negocio, no de implementación, y está sin tomar.
 
 Los cuatro tipos de trabajo de la cola están implementados y **los cuatro se han
 visto correr** con `claude-code-local`: `scan.zone`, `audit.prospect`,

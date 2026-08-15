@@ -14,6 +14,8 @@
     "@anthropic-ai/sdk": "^0.117.1",
     "@borsoga/db": "workspace:*",
     "@borsoga/shared": "workspace:*",
+    "chrome-launcher": "^1.1.2",
+    "lighthouse": "^12.8.2",
     "drizzle-orm": "^0.44.0",
     "playwright": "^1.49.0",
     "zod": "^4.0.0"
