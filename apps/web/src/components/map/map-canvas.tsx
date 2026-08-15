@@ -3,26 +3,34 @@
 /**
  * El mapa: columna central de la vista principal (handoff §6.1).
  *
- * Dos caminos, y el que se toma depende de la configuración:
+ * MapLibre GL con tiles vectoriales de OpenFreeMap. Sin clave, sin registro y
+ * sin facturación — pero el motivo de elegirlo no es el coste: el style JSON se
+ * genera desde los tokens de `theme.css` (ver `lib/map-style.ts`), así que el
+ * mapa cambia con el tema como cualquier otra superficie de la interfaz. Un
+ * mapa de terceros estilizado en una consola ajena no puede hacer eso.
  *
- * - **Mapa real.** Necesita `GOOGLE_MAPS_BROWSER_KEY` *y* `GOOGLE_MAPS_MAP_ID`.
- *   Los marcadores llevan el score dentro, así que tienen que ser HTML, y eso
- *   en la API de Google es `AdvancedMarker`, que exige un mapId configurado en
- *   la nube. Con la clave pero sin el mapId los marcadores no se pintan — de
- *   ahí que se exijan los dos y no solo la clave.
- *
- * - **Lienzo de reserva.** Sin esa configuración se pinta el mismo mapa
- *   estilizado del prototipo, con los prospectos proyectados de verdad sobre el
- *   área de búsqueda. No son tiles, y lo dice en pantalla: un mapa de mentira
- *   que no se anuncia es peor que no tener mapa.
+ * Si los tiles no cargan —sin red, o el servicio caído— se cae al lienzo de
+ * referencia con los prospectos proyectados sobre el área de búsqueda, y lo
+ * dice en pantalla. La herramienta sigue usable sin mapa: la lista y el
+ * expediente son lo que se trabaja.
  */
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { APIProvider, AdvancedMarker, Map as GoogleMap } from "@vis.gl/react-google-maps";
+import {
+  Layer,
+  Map as MapLibreMap,
+  Marker,
+  NavigationControl,
+  Source,
+} from "react-map-gl/maplibre";
+import "maplibre-gl/dist/maplibre-gl.css";
+import type { FeatureCollection } from "geojson";
 import { BRANCH_META, type Branch } from "@borsoga/shared";
 import type { ProspectRow, ScanSummary, ZoneSummary } from "@/lib/queries";
 import { branchColor, money, moneyExact, scoreColor, scoreSurface } from "@/lib/display";
+import { buildMapStyle } from "@/lib/map-style";
+import { useMapPalette } from "@/lib/use-map-palette";
 
 type ColorMode = "score" | "branch" | "ticket" | "crm";
 
@@ -90,11 +98,14 @@ function ScoreMarker({
   const size = selected ? 38 : 29;
 
   return (
-    <span className="relative grid place-items-center" style={{ width: size, height: size }}>
+    <span
+      className="relative grid cursor-pointer place-items-center"
+      style={{ width: size, height: size }}
+    >
       {selected && (
         <span
           className="animate-pulse-ring absolute inset-0 rounded-full"
-          style={{ border: `2px solid var(--accent)` }}
+          style={{ border: "2px solid var(--accent)" }}
           aria-hidden
         />
       )}
@@ -114,24 +125,39 @@ function ScoreMarker({
   );
 }
 
-/** Proyección equirectangular sobre el cuadro del área de búsqueda, en %. */
-function project(
-  row: ProspectRow,
-  zone: ZoneSummary,
-): { left: string; top: string } {
+/**
+ * El área de búsqueda como polígono geográfico, no como adorno CSS: así se
+ * mueve y escala con el mapa, que es lo único que la hace decir la verdad
+ * sobre qué se escaneó.
+ */
+function areaPolygon(zone: ZoneSummary, steps = 96): FeatureCollection {
   const latDelta = zone.radiusMeters / 111_320;
   const lngDelta =
     zone.radiusMeters / (111_320 * Math.cos((zone.centerLat * Math.PI) / 180) || 1);
 
-  // 1,35 de holgura para que un prospecto en el borde no quede pegado al marco.
-  const spanLat = latDelta * 1.35;
-  const spanLng = lngDelta * 1.35;
+  const ring: Array<[number, number]> = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const angle = (i / steps) * 2 * Math.PI;
+    ring.push([
+      zone.centerLng + lngDelta * Math.cos(angle),
+      zone.centerLat + latDelta * Math.sin(angle),
+    ]);
+  }
 
-  const x = (row.lng - (zone.centerLng - spanLng)) / (2 * spanLng);
-  const y = 1 - (row.lat - (zone.centerLat - spanLat)) / (2 * spanLat);
+  return {
+    type: "FeatureCollection",
+    features: [
+      { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } },
+    ],
+  };
+}
 
-  const clamp = (v: number) => Math.min(0.97, Math.max(0.03, v));
-  return { left: `${clamp(x) * 100}%`, top: `${clamp(y) * 100}%` };
+/** Zoom que mete el diámetro del área en el ancho típico de la columna. */
+function zoomForRadius(lat: number, radiusMeters: number, viewportPx = 620): number {
+  const metersPerPixel = (2 * radiusMeters * 1.3) / viewportPx;
+  const atZoom0 = (156_543.03392 * Math.cos((lat * Math.PI) / 180)) / 1;
+  const zoom = Math.log2(atZoom0 / metersPerPixel);
+  return Math.min(16, Math.max(8, zoom));
 }
 
 function Legend({ mode }: { mode: ColorMode }) {
@@ -153,7 +179,7 @@ function Legend({ mode }: { mode: ColorMode }) {
           ];
 
   return (
-    <div className="pointer-events-none absolute bottom-3 left-3 rounded-lg border border-line2 bg-glass px-2.5 py-2 backdrop-blur">
+    <div className="pointer-events-none absolute bottom-3 left-3 z-10 rounded-lg border border-line2 bg-glass px-2.5 py-2 backdrop-blur">
       <div className="flex flex-col gap-1">
         {items.map((i) => (
           <span key={i.label} className="flex items-center gap-1.5 text-2xs whitespace-nowrap">
@@ -162,7 +188,10 @@ function Legend({ mode }: { mode: ColorMode }) {
           </span>
         ))}
         <span className="mt-0.5 flex items-center gap-1.5 text-2xs whitespace-nowrap">
-          <span className="h-2 w-2 rounded-full" style={{ background: "var(--dim2)", opacity: 0.45 }} />
+          <span
+            className="h-2 w-2 rounded-full"
+            style={{ background: "var(--dim2)", opacity: 0.45 }}
+          />
           <span style={{ color: "var(--muted)" }}>Descartado</span>
         </span>
       </div>
@@ -174,7 +203,7 @@ function ScanPanel({ scan }: { scan: ScanSummary }) {
   const done = scan.progressTotal > 0 ? scan.progressAudited / scan.progressTotal : 0;
 
   return (
-    <div className="absolute top-3 right-3 w-[248px] rounded-lg border border-line2 bg-glass p-2.5 backdrop-blur">
+    <div className="absolute top-3 right-3 z-10 w-[248px] rounded-lg border border-line2 bg-glass p-2.5 backdrop-blur">
       <div className="flex items-center gap-1.5">
         <span
           className="h-1.5 w-1.5 rounded-full"
@@ -195,7 +224,10 @@ function ScanPanel({ scan }: { scan: ScanSummary }) {
         />
       </div>
 
-      <div className="mt-1.5 flex justify-between font-mono text-2xs" style={{ color: "var(--dim)" }}>
+      <div
+        className="mt-1.5 flex justify-between font-mono text-2xs"
+        style={{ color: "var(--dim)" }}
+      >
         <span>
           {scan.progressAudited}/{scan.progressTotal} auditados
         </span>
@@ -220,31 +252,32 @@ export function MapCanvas({
   selectedId,
   zone,
   scan,
-  apiKey,
-  mapId,
 }: {
   rows: ProspectRow[];
   selectedId: string | null;
   zone: ZoneSummary | null;
   scan: ScanSummary | null;
-  apiKey: string | null;
-  mapId: string | null;
 }) {
   const [mode, setMode] = useState<ColorMode>("score");
+  const [tilesFailed, setTilesFailed] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const palette = useMapPalette();
 
-  function select(id: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("p", id);
-    router.push(`/?${params.toString()}`, { scroll: false });
-  }
+  const mapStyle = useMemo(() => buildMapStyle(palette), [palette]);
 
-  const realMap = Boolean(apiKey && mapId && zone);
+  const select = useCallback(
+    (id: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("p", id);
+      router.push(`/?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
 
   const controls = (
     <>
-      <div className="absolute top-3 left-3 flex items-center gap-1.5">
+      <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
         <div className="flex items-center gap-0.5 rounded-lg border border-line2 bg-glass p-0.5 backdrop-blur">
           {COLOR_MODES.map((m) => (
             <button
@@ -278,7 +311,10 @@ export function MapCanvas({
 
   if (!zone) {
     return (
-      <div className="relative grid flex-1 place-items-center" style={{ background: "var(--map-bg)" }}>
+      <div
+        className="relative grid flex-1 place-items-center"
+        style={{ background: "var(--map-bg)" }}
+      >
         <p className="text-sm2" style={{ color: "var(--muted)" }}>
           No hay ninguna zona configurada todavía.
         </p>
@@ -286,44 +322,78 @@ export function MapCanvas({
     );
   }
 
-  if (realMap) {
+  if (tilesFailed) {
     return (
-      <div className="relative flex-1">
-        <APIProvider apiKey={apiKey!}>
-          <GoogleMap
-            mapId={mapId!}
-            defaultCenter={{ lat: zone.centerLat, lng: zone.centerLng }}
-            defaultZoom={12}
-            disableDefaultUI
-            zoomControl
-            gestureHandling="greedy"
-            className="h-full w-full"
-          >
-            {rows.map((row) => (
-              <AdvancedMarker
-                key={row.id}
-                position={{ lat: row.lat, lng: row.lng }}
-                onClick={() => select(row.id)}
-                zIndex={row.id === selectedId ? 10 : 1}
-                title={`${row.name} · score ${row.score}`}
-              >
-                <ScoreMarker row={row} mode={mode} selected={row.id === selectedId} />
-              </AdvancedMarker>
-            ))}
-          </GoogleMap>
-        </APIProvider>
-        {controls}
-      </div>
+      <FallbackCanvas
+        rows={rows}
+        zone={zone}
+        selectedId={selectedId}
+        mode={mode}
+        onSelect={select}
+        controls={controls}
+      />
     );
   }
 
-  return <FallbackCanvas rows={rows} zone={zone} selectedId={selectedId} mode={mode} onSelect={select} controls={controls} />;
+  return (
+    <div className="relative flex-1">
+      <MapLibreMap
+        initialViewState={{
+          longitude: zone.centerLng,
+          latitude: zone.centerLat,
+          zoom: zoomForRadius(zone.centerLat, zone.radiusMeters),
+        }}
+        mapStyle={mapStyle}
+        attributionControl={{ compact: true }}
+        onError={() => setTilesFailed(true)}
+        style={{ width: "100%", height: "100%" }}
+      >
+        <NavigationControl position="bottom-right" showCompass={false} />
+
+        <Source id="area" type="geojson" data={areaPolygon(zone)}>
+          <Layer
+            id="area-relleno"
+            type="fill"
+            paint={{ "fill-color": palette.accent, "fill-opacity": 0.05 }}
+          />
+          <Layer
+            id="area-borde"
+            type="line"
+            paint={{
+              "line-color": palette.accent,
+              "line-width": 1.5,
+              "line-dasharray": [3, 3],
+            }}
+          />
+        </Source>
+
+        {rows.map((row) => (
+          <Marker
+            key={row.id}
+            longitude={row.lng}
+            latitude={row.lat}
+            anchor="center"
+            onClick={(e) => {
+              // Sin esto el mapa recibe también el clic y deselecciona.
+              e.originalEvent.stopPropagation();
+              select(row.id);
+            }}
+          >
+            <ScoreMarker row={row} mode={mode} selected={row.id === selectedId} />
+          </Marker>
+        ))}
+      </MapLibreMap>
+
+      {controls}
+    </div>
+  );
 }
 
 /**
- * El mapa del prototipo: fondo tokenizado y prospectos proyectados de verdad.
- * En claro la rampa se invierte (fondo claro, calles más oscuras) — copiar la
- * relación del modo oscuro deja el mapa en blanco, handoff §9.
+ * Reserva cuando los tiles no cargan. Fondo tokenizado y prospectos proyectados
+ * de verdad sobre el área. En claro la rampa se invierte (fondo claro, calles
+ * más oscuras) — copiar la relación del modo oscuro deja el mapa en blanco,
+ * handoff §9. Al salir de los tokens, eso ya viene resuelto.
  */
 function FallbackCanvas({
   rows,
@@ -340,14 +410,23 @@ function FallbackCanvas({
   onSelect: (id: string) => void;
   controls: React.ReactNode;
 }) {
-  const positioned = useMemo(
-    () => rows.map((row) => ({ row, pos: project(row, zone) })),
-    [rows, zone],
-  );
+  const positioned = useMemo(() => {
+    const latDelta = zone.radiusMeters / 111_320;
+    const lngDelta =
+      zone.radiusMeters / (111_320 * Math.cos((zone.centerLat * Math.PI) / 180) || 1);
+    const spanLat = latDelta * 1.35;
+    const spanLng = lngDelta * 1.35;
+    const clamp = (v: number) => Math.min(0.97, Math.max(0.03, v));
+
+    return rows.map((row) => ({
+      row,
+      left: `${clamp((row.lng - (zone.centerLng - spanLng)) / (2 * spanLng)) * 100}%`,
+      top: `${clamp(1 - (row.lat - (zone.centerLat - spanLat)) / (2 * spanLat)) * 100}%`,
+    }));
+  }, [rows, zone]);
 
   return (
     <div className="relative flex-1 overflow-hidden" style={{ background: "var(--map-bg)" }}>
-      {/* Retícula de calles: decorativa, marca la escala del área. */}
       <svg className="absolute inset-0 h-full w-full" aria-hidden>
         <defs>
           <pattern id="calles" width="72" height="72" patternUnits="userSpaceOnUse">
@@ -359,7 +438,6 @@ function FallbackCanvas({
         <rect width="100%" height="100%" fill="url(#calles)" />
       </svg>
 
-      {/* Área de búsqueda: círculo de trazo discontinuo con relleno tenue. */}
       <div
         className="pointer-events-none absolute rounded-full"
         style={{
@@ -369,19 +447,18 @@ function FallbackCanvas({
           aspectRatio: "1",
           transform: "translate(-50%, -50%)",
           border: "1.5px dashed var(--accent-line)",
-          background:
-            "radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)",
+          background: "radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)",
         }}
       />
 
-      {positioned.map(({ row, pos }) => (
+      {positioned.map(({ row, left, top }) => (
         <button
           key={row.id}
           type="button"
           onClick={() => onSelect(row.id)}
           title={`${row.name} · score ${row.score}`}
           className="absolute -translate-x-1/2 -translate-y-1/2"
-          style={{ left: pos.left, top: pos.top, zIndex: row.id === selectedId ? 10 : 1 }}
+          style={{ left, top, zIndex: row.id === selectedId ? 10 : 1 }}
         >
           <ScoreMarker row={row} mode={mode} selected={row.id === selectedId} />
         </button>
@@ -390,10 +467,10 @@ function FallbackCanvas({
       {controls}
 
       <p
-        className="pointer-events-none absolute right-3 bottom-3 rounded-md border border-line2 bg-glass px-2 py-1 text-2xs backdrop-blur"
+        className="pointer-events-none absolute right-3 bottom-3 z-10 rounded-md border border-line2 bg-glass px-2 py-1 text-2xs backdrop-blur"
         style={{ color: "var(--muted)" }}
       >
-        Mapa de referencia · faltan GOOGLE_MAPS_BROWSER_KEY y GOOGLE_MAPS_MAP_ID
+        Mapa de referencia · los tiles no cargaron
       </p>
     </div>
   );

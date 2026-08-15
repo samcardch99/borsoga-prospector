@@ -41,16 +41,29 @@ estado de cliente: así recargar no pierde el sitio, el enlace se puede pasar a
 otra persona, y el expediente se renderiza en el servidor con el prospecto ya
 resuelto.
 
-### El mapa necesita dos cosas, no una
+### El mapa no necesita ninguna clave
 
-Con `GOOGLE_MAPS_BROWSER_KEY` **y** `GOOGLE_MAPS_MAP_ID` se pintan los tiles
-reales. Sin las dos, sale el mapa estilizado del prototipo con los prospectos
-proyectados de verdad sobre el área de búsqueda, y un aviso en pantalla de que
-no son tiles.
+MapLibre GL con tiles vectoriales de OpenFreeMap: sin clave, sin registro, sin
+facturación. Funciona nada más clonar.
 
-El mapId hace falta porque los marcadores llevan el score dentro, así que son
-HTML, y eso en la API de Google obliga a `AdvancedMarker`, que no se pinta sin
-un mapId configurado en la consola. Con la clave sola no basta.
+El motivo de elegirlo **no** fue el coste. `theme.css` ya traía una paleta de
+mapa completa —`--map-bg`, `--water`, `--island`, `--road1` a `--road4`,
+`--block`— porque el handoff §9 trata el mapa como parte del diseño. MapLibre
+consume un style JSON, así que esos tokens se leen y se aplican directamente
+(`src/lib/map-style.ts`) y el mapa cambia con el tema como cualquier otra
+superficie. Con Google habría que recrear la paleta a mano en la consola de
+Cloud, en un Map ID por tema y fuera del repositorio.
+
+La regla de que "en modo claro la rampa del mapa se invierte" no se implementa
+en ningún sitio: ya está en los tokens. En claro `--block` es más oscuro que
+`--island`; en oscuro, más claro que `--map-bg`. Al leerlos tal cual, el mapa se
+invierte solo.
+
+Si los tiles no cargan —sin red, o el servicio caído— se cae al lienzo de
+referencia con los prospectos proyectados sobre el área, y lo dice en pantalla.
+OpenFreeMap es un servicio gratuito de mejor esfuerzo; si algún día importa la
+disponibilidad, se autoaloja un extracto del sur de Florida con Protomaps sin
+tocar el código de la vista, porque hablan el mismo formato de estilo.
 
 ### Meter trabajo en la cola sin interfaz
 
@@ -221,13 +234,9 @@ recoge directivos ni menciones, y las que lo harían (`search_web` y
 `fetch_external_profile`) son dos de las seis que faltan del paso 3. Construir
 el panel ahora sería pintar un marco vacío.
 
-El **control de zoom** de la esquina inferior derecha solo aparece con el mapa
-real, que trae el suyo. En el lienzo de reserva no hay nada que ampliar, así
-que ese hueco lo ocupa el aviso de que no son tiles.
-
-El **camino del mapa real está sin verificar**: se ha probado a fondo el lienzo
-de reserva, pero no hay `GOOGLE_MAPS_MAP_ID` en este entorno, así que los tiles
-y los `AdvancedMarker` no se han visto funcionando.
+El **control de zoom** solo aparece con el mapa real, que trae el suyo. En el
+lienzo de reserva no hay nada que ampliar, así que ese hueco lo ocupa el aviso
+de que los tiles no cargaron.
 
 Los botones "Abrir expediente", "Generar propuesta", "Escanear zona" y "Dibujar
 área" están visibles y apagados, con la pista de en qué paso llegan. Se dejan

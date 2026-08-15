@@ -91,14 +91,7 @@ export default async function MapaPage({ searchParams }: PageProps<"/">) {
               selectedId={selectedId}
               exportHref={`/api/prospects?${exportParams.toString()}`}
             />
-            <MapCanvas
-              rows={visible}
-              selectedId={selectedId}
-              zone={zone}
-              scan={scan}
-              apiKey={process.env.GOOGLE_MAPS_BROWSER_KEY ?? null}
-              mapId={process.env.GOOGLE_MAPS_MAP_ID ?? null}
-            />
+            <MapCanvas rows={visible} selectedId={selectedId} zone={zone} scan={scan} />
             <DossierSummary dossier={dossier} />
           </>
         )}
