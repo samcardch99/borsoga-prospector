@@ -393,9 +393,23 @@ las seis columnas, sus contadores y la barra de métricas. Las columnas se pinta
 aunque estén vacías a propósito — un tablero vacío sigue diciendo cuáles son las
 etapas, y sustituirlo por una frase lo esconde.
 
-El **mini mapa arrastrable** del formulario de zona (handoff §6.7) no está: los
-campos de centro y radio se escriben a mano. Los **filtros de responsable y
-periodo** del pipeline tampoco, porque no hay usuarios a quien asignar nada.
+El **mini mapa arrastrable** del formulario de zona (handoff §6.7) sigue sin
+estar: los campos de centro y radio se escriben a mano.
+
+Se intentó y se retiró. El componente montaba —lienzo, marcadores del centro y
+del borde bien colocados, arrastre cableado— pero el mapa nunca terminaba de
+cargar el estilo: ni `load`, ni `error`, ni nada en consola, con el mismo style
+JSON que el mapa grande sí carga en la misma sesión. Se descartó que fuera el
+encuadre, el bundle obsoleto de HMR y el agotamiento de contextos WebGL (falla
+igual en pestaña nueva).
+
+Sin fondo de mapa el componente no sirve para nada —arrastrar un punto sobre un
+recuadro vacío no dice dónde estás— así que se quitó en vez de dejar un hueco en
+blanco. Lo que sí se quedó es `apps/web/src/lib/geo.ts`, donde vive ahora la
+geometría del área que antes estaba embebida en el mapa grande.
+
+Los **filtros de responsable y periodo** del pipeline tampoco están, porque no
+hay usuarios a quien asignar nada.
 
 El movimiento entre etapas va por un selector en cada tarjeta y no arrastrando.
 El handoff describe el arrastre para los bloques de la propuesta, no para el

@@ -26,10 +26,10 @@ import {
   type MapRef,
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { FeatureCollection } from "geojson";
 import { BRANCH_META, type Branch } from "@borsoga/shared";
 import type { ProspectRow, ScanSummary, ZoneSummary } from "@/lib/queries";
 import { branchColor, money, moneyExact, scoreColor, scoreSurface } from "@/lib/display";
+import { areaPolygon, metersPerDegreeLng, zoomForRadius } from "@/lib/geo";
 import { applyMapPalette, buildMapStyle } from "@/lib/map-style";
 import { useMapPalette } from "@/lib/use-map-palette";
 
@@ -124,41 +124,6 @@ function ScoreMarker({
       </span>
     </span>
   );
-}
-
-/**
- * El área de búsqueda como polígono geográfico, no como adorno CSS: así se
- * mueve y escala con el mapa, que es lo único que la hace decir la verdad
- * sobre qué se escaneó.
- */
-function areaPolygon(zone: ZoneSummary, steps = 96): FeatureCollection {
-  const latDelta = zone.radiusMeters / 111_320;
-  const lngDelta =
-    zone.radiusMeters / (111_320 * Math.cos((zone.centerLat * Math.PI) / 180) || 1);
-
-  const ring: Array<[number, number]> = [];
-  for (let i = 0; i <= steps; i += 1) {
-    const angle = (i / steps) * 2 * Math.PI;
-    ring.push([
-      zone.centerLng + lngDelta * Math.cos(angle),
-      zone.centerLat + latDelta * Math.sin(angle),
-    ]);
-  }
-
-  return {
-    type: "FeatureCollection",
-    features: [
-      { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } },
-    ],
-  };
-}
-
-/** Zoom que mete el diámetro del área en el ancho típico de la columna. */
-function zoomForRadius(lat: number, radiusMeters: number, viewportPx = 620): number {
-  const metersPerPixel = (2 * radiusMeters * 1.3) / viewportPx;
-  const atZoom0 = (156_543.03392 * Math.cos((lat * Math.PI) / 180)) / 1;
-  const zoom = Math.log2(atZoom0 / metersPerPixel);
-  return Math.min(16, Math.max(8, zoom));
 }
 
 function Legend({ mode }: { mode: ColorMode }) {
@@ -355,7 +320,7 @@ export function MapCanvas({
         initialViewState={{
           longitude: zone.centerLng,
           latitude: zone.centerLat,
-          zoom: zoomForRadius(zone.centerLat, zone.radiusMeters),
+          zoom: zoomForRadius(zone.centerLat, zone.radiusMeters, 620),
         }}
         mapStyle={mapStyle}
         attributionControl={{ compact: true }}
@@ -368,7 +333,7 @@ export function MapCanvas({
       >
         <NavigationControl position="bottom-right" showCompass={false} />
 
-        <Source id="area" type="geojson" data={areaPolygon(zone)}>
+        <Source id="area" type="geojson" data={areaPolygon({ centerLat: zone.centerLat, centerLng: zone.centerLng, radiusMeters: zone.radiusMeters })}>
           <Layer
             id="area-relleno"
             type="fill"
@@ -430,8 +395,7 @@ function FallbackCanvas({
 }) {
   const positioned = useMemo(() => {
     const latDelta = zone.radiusMeters / 111_320;
-    const lngDelta =
-      zone.radiusMeters / (111_320 * Math.cos((zone.centerLat * Math.PI) / 180) || 1);
+    const lngDelta = zone.radiusMeters / metersPerDegreeLng(zone.centerLat);
     const spanLat = latDelta * 1.35;
     const spanLng = lngDelta * 1.35;
     const clamp = (v: number) => Math.min(0.97, Math.max(0.03, v));
