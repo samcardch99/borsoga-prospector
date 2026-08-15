@@ -26,6 +26,7 @@ export function TabBar({
   counts,
   lastScanLabel,
   expedienteHref,
+  propuestaHref,
 }: {
   counts: { review: number; proposals: number; pipeline: number };
   lastScanLabel: string | null;
@@ -35,6 +36,8 @@ export function TabBar({
    * que es más honesto que llevar a una pantalla que pregunta lo mismo.
    */
   expedienteHref?: string | null;
+  /** Igual que el expediente: la propuesta es de un prospecto concreto. */
+  propuestaHref?: string | null;
 }) {
   const pathname = usePathname();
 
@@ -44,7 +47,18 @@ export function TabBar({
     expedienteHref
       ? { label: "Expediente", href: expedienteHref, matchPrefix: "/expediente" }
       : { label: "Expediente", pendingNote: "Elige antes un prospecto en el mapa" },
-    { label: "Propuestas", count: counts.proposals, pendingNote: "Llega en el paso 7" },
+    propuestaHref
+      ? {
+          label: "Propuestas",
+          href: propuestaHref,
+          count: counts.proposals,
+          matchPrefix: "/propuestas",
+        }
+      : {
+          label: "Propuestas",
+          count: counts.proposals,
+          pendingNote: "Elige antes un prospecto en el mapa",
+        },
     { label: "Pipeline", count: counts.pipeline, pendingNote: "Llega en el paso 8" },
     { label: "Traza", pendingNote: "La traza se escribe ya en la base; la pantalla viene después" },
     { label: "Zonas", pendingNote: "Llega en el paso 8" },

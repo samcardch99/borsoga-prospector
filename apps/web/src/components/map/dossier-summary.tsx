@@ -246,15 +246,13 @@ export function DossierSummary({ dossier }: { dossier: Dossier | null }) {
         >
           Abrir expediente
         </Link>
-        <button
-          type="button"
-          disabled
-          title="El generador de propuestas llega en el paso 7"
-          className="h-8 flex-1 cursor-not-allowed rounded-md border border-line2 text-base whitespace-nowrap opacity-45"
-          style={{ color: "var(--muted)" }}
+        <Link
+          href={`/propuestas/${dossier.id}`}
+          className="grid h-8 flex-1 place-items-center rounded-md border border-line2 text-base whitespace-nowrap transition-colors hover:bg-hover"
+          style={{ color: "var(--text2)" }}
         >
           Generar propuesta
-        </button>
+        </Link>
       </footer>
     </aside>
   );

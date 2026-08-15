@@ -225,7 +225,7 @@ Del handoff §12, adaptado al enfoque agéntico:
 4. ~~Mapa + lista + expediente resumido con datos reales~~ ✅
 5. ~~Expediente completo con evidencia y capturas~~ ✅
 6. ~~Cola de revisión con veredictos y reverificación~~ ✅
-7. Generador de propuesta: configurar y PDF, luego modo edición
+7. Generador de propuesta: ~~configurar y PDF~~ ✅, modo edición pendiente
 8. Pipeline y zonas programadas
 
 La Traza va antes que las pantallas: es lo que hace depurable todo lo demás, y
@@ -294,3 +294,25 @@ pasar con el worker parado.
 
 No hay usuarios ni sesiones, así que `findings.reviewed_by` se queda a null.
 Cuando los haya, se rellena en `apps/web/src/app/revision/actions.ts`.
+
+### Qué falta del paso 7
+
+El **modo de edición** —bloques arrastrables, selector de tono, reescritura con
+IA— no está. Es la segunda mitad del paso según el propio handoff ("primero
+configurar y PDF, luego el modo edición"), y con ella llega `proposal.draft`,
+el último tipo de trabajo que la cola contempla y el worker aún rechaza.
+
+El **PDF sale de imprimir**, no de un servicio de render: el navegador ya sabe
+hacer un PDF de una página y el documento está maquetado para que al imprimir
+solo quede él. No se ha llegado a generar un PDF real en este entorno; lo
+verificado es que la hoja `@media print` está en el bundle, que el panel lleva
+`print:hidden` y que el botón llama a `window.print()`.
+
+Entrar en `/propuestas/[id]` **crea el borrador** si no existe. Es deliberado:
+todo lo que lleva la propuesta sale del expediente, así que pedir un clic para
+generar algo ya determinado solo añadiría un paso. Un borrador ya tocado no se
+pisa.
+
+Los importes y los entregables de `PHASE_TEMPLATE` son un marcador de posición,
+igual que los de `BASE_TICKET_USD`. Están juntos en
+`packages/shared/src/pricing.ts` para que revisarlos sea abrir un archivo.

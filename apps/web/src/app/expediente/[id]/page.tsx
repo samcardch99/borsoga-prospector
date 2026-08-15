@@ -74,6 +74,7 @@ export default async function ExpedientePage({ params }: PageProps<"/expediente/
         counts={navCounts}
         lastScanLabel={null}
         expedienteHref={`/expediente/${dossier.id}`}
+        propuestaHref={`/propuestas/${dossier.id}`}
       />
 
       <header className="shrink-0 border-b border-line bg-panel px-4 py-3">
@@ -129,15 +130,13 @@ export default async function ExpedientePage({ params }: PageProps<"/expediente/
             <Figure label="confirmados" value={String(confirmed)} />
             <Figure label="ticket" value={money(dossier.ticketEstimate)} />
 
-            <button
-              type="button"
-              disabled
-              title="El generador de propuestas llega en el paso 7"
-              className="mt-1 h-8 cursor-not-allowed rounded-md px-3 text-base whitespace-nowrap opacity-45"
+            <Link
+              href={`/propuestas/${dossier.id}`}
+              className="mt-1 grid h-8 place-items-center rounded-md px-3 text-base whitespace-nowrap transition-colors"
               style={{ background: "var(--btn-bg)", color: "var(--btn-fg)" }}
             >
               Generar propuesta
-            </button>
+            </Link>
           </div>
         </div>
       </header>
