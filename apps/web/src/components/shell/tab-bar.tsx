@@ -60,7 +60,7 @@ export function TabBar({
           pendingNote: "Elige antes un prospecto en el mapa",
         },
     { label: "Pipeline", href: "/pipeline", count: counts.pipeline },
-    { label: "Traza", pendingNote: "La traza se escribe ya en la base; la pantalla viene después" },
+    { label: "Traza", href: "/traza" },
     { label: "Zonas", href: "/zonas" },
   ];
 

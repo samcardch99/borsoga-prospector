@@ -20,6 +20,7 @@ import {
   prospects as prospectsTable,
   quotaUsage,
   scans,
+  traceSteps,
   zones,
 } from "@borsoga/db";
 import type {
@@ -488,6 +489,118 @@ export const getReviewedToday = cache(async (): Promise<number> => {
 
   return rows[0]?.n ?? 0;
 });
+
+// ─── Traza ───────────────────────────────────────────────────────────────────
+
+export type TraceFilter = "todos" | "errores" | "ia";
+
+export type TraceStatus = "ok" | "retry" | "error" | "timeout" | "http_404" | "skipped";
+
+export interface TraceStepRow {
+  id: string;
+  step: string;
+  target: string;
+  status: TraceStatus;
+  startedAt: Date;
+  durationMs: number;
+  model: string | null;
+  tokensIn: number | null;
+  tokensOut: number | null;
+  costUsd: number;
+  retries: number;
+  robotsRespected: boolean | null;
+  requestsPerSecond: number | null;
+  cacheHits: number | null;
+  input: unknown;
+  output: unknown;
+  prospectName: string | null;
+}
+
+export interface TraceScan extends ScanSummary {
+  zoneName: string;
+  totalSteps: number;
+  totalTokens: number;
+  totalErrors: number;
+  finishedAt: Date | null;
+}
+
+/** El escaneo que se está mirando: el pedido, o el más reciente que haya. */
+export const getTraceScan = cache(async (scanId?: string): Promise<TraceScan | null> => {
+  const rows = await db
+    .select({ scan: scans, zoneName: zones.name })
+    .from(scans)
+    .innerJoin(zones, eq(scans.zoneId, zones.id))
+    .where(scanId ? eq(scans.id, scanId) : undefined)
+    .orderBy(desc(scans.startedAt))
+    .limit(1);
+
+  const row = rows[0];
+  if (!row) return null;
+  const s = row.scan;
+
+  return {
+    id: s.id,
+    zoneName: row.zoneName,
+    status: s.status,
+    startedAt: s.startedAt,
+    finishedAt: s.finishedAt,
+    progressFound: s.progressFound,
+    progressAudited: s.progressAudited,
+    progressTotal: s.progressTotal,
+    progressDisqualified: s.progressDisqualified,
+    totalCostUsd: Number(s.totalCostUsd),
+    totalSteps: s.totalSteps,
+    totalTokens: s.totalTokens,
+    totalErrors: s.totalErrors,
+    errorCode: s.errorCode,
+    errorMessage: s.errorMessage,
+  };
+});
+
+/**
+ * Los pasos de un escaneo, en el orden en que ocurrieron.
+ *
+ * Con el enfoque agéntico cada fila es una llamada que la IA **decidió** hacer,
+ * no un paso de una receta fija. Por eso el orden es cronológico y no hay
+ * agrupación por fases: la secuencia es el dato.
+ */
+export const listTraceSteps = cache(
+  async (scanId: string, filter: TraceFilter = "todos"): Promise<TraceStepRow[]> => {
+    const where =
+      filter === "errores"
+        ? and(eq(traceSteps.scanId, scanId), sql`${traceSteps.status} <> 'ok'`)
+        : filter === "ia"
+          ? and(eq(traceSteps.scanId, scanId), sql`${traceSteps.model} is not null`)
+          : eq(traceSteps.scanId, scanId);
+
+    const rows = await db
+      .select({
+        id: traceSteps.id,
+        step: traceSteps.step,
+        target: traceSteps.target,
+        status: traceSteps.status,
+        startedAt: traceSteps.startedAt,
+        durationMs: traceSteps.durationMs,
+        model: traceSteps.model,
+        tokensIn: traceSteps.tokensIn,
+        tokensOut: traceSteps.tokensOut,
+        costUsd: traceSteps.costUsd,
+        retries: traceSteps.retries,
+        robotsRespected: traceSteps.robotsRespected,
+        requestsPerSecond: traceSteps.requestsPerSecond,
+        cacheHits: traceSteps.cacheHits,
+        input: traceSteps.input,
+        output: traceSteps.output,
+        prospectName: prospectsTable.name,
+      })
+      .from(traceSteps)
+      .leftJoin(prospectsTable, eq(traceSteps.prospectId, prospectsTable.id))
+      .where(where)
+      .orderBy(traceSteps.startedAt);
+
+    return rows.map((r) => ({ ...r, costUsd: Number(r.costUsd) }));
+  },
+);
 
 // ─── Pipeline ────────────────────────────────────────────────────────────────
 

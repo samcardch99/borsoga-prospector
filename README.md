@@ -266,12 +266,20 @@ registradas, así que el agente no las ve y no puede prometer evidencia que
 nadie recogió. Ampliar la superficie es añadirlas en
 `apps/worker/src/tools/`, no meter pasos antes del agente.
 
-La Traza escribe en la base y se puede leer con `psql`; la **pantalla** de
-Traza (handoff §6.6) es parte del trabajo de interfaz que viene después.
+Sin implementar todavía: `proposal.draft`, el último tipo de trabajo que la
+cola contempla y el worker rechaza con "tipo de trabajo no soportado". Llega
+con el modo de edición de la propuesta.
 
-Sin implementar todavía: `finding.recheck` y `proposal.draft`, los dos tipos de
-trabajo que la cola ya contempla y el worker rechaza con "tipo de trabajo no
-soportado".
+**La pantalla de Traza ya existe** (`/traza`), y lo primero que ha destapado es
+que los contadores de `scans` y las filas de `trace_steps` no cuadran: en el
+escaneo de pruebas la tabla dice 11 pasos y 6 errores, y hay 4 filas, todas
+`ok`. Hubo trabajo que ocurrió sin registrarse como paso.
+
+No está probado de dónde sale la diferencia — `scan.zone` y `audit.prospect`
+llaman los dos a `recordStep`, así que puede ser un paso que no se escribe o un
+contador que suma algo que no es un paso. La pantalla avisa de la discrepancia
+sin atribuirle causa, que es lo único comprobable hoy. Merece un rato con el
+worker en marcha.
 
 ### Qué falta del paso 4
 
