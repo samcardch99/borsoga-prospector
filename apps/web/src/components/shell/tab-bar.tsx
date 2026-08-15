@@ -59,9 +59,9 @@ export function TabBar({
           count: counts.proposals,
           pendingNote: "Elige antes un prospecto en el mapa",
         },
-    { label: "Pipeline", count: counts.pipeline, pendingNote: "Llega en el paso 8" },
+    { label: "Pipeline", href: "/pipeline", count: counts.pipeline },
     { label: "Traza", pendingNote: "La traza se escribe ya en la base; la pantalla viene después" },
-    { label: "Zonas", pendingNote: "Llega en el paso 8" },
+    { label: "Zonas", href: "/zonas" },
   ];
 
   return (

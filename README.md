@@ -226,7 +226,7 @@ Del handoff §12, adaptado al enfoque agéntico:
 5. ~~Expediente completo con evidencia y capturas~~ ✅
 6. ~~Cola de revisión con veredictos y reverificación~~ ✅
 7. Generador de propuesta: ~~configurar y PDF~~ ✅, modo edición pendiente
-8. Pipeline y zonas programadas
+8. ~~Pipeline y zonas~~ ✅ · la programación cron no se dispara sola todavía
 
 La Traza va antes que las pantallas: es lo que hace depurable todo lo demás, y
 con un agente que decide por su cuenta hace todavía más falta.
@@ -316,3 +316,25 @@ pisa.
 Los importes y los entregables de `PHASE_TEMPLATE` son un marcador de posición,
 igual que los de `BASE_TICKET_USD`. Están juntos en
 `packages/shared/src/pricing.ts` para que revisarlos sea abrir un archivo.
+
+### Qué falta del paso 8
+
+La **programación cron no se dispara sola**. Las zonas guardan su expresión y la
+tabla la muestra, pero falta un planificador que encole `scan.zone` a su hora;
+hoy es un proceso que no existe. Escanear a mano desde la tabla sí funciona y
+encola igual que el CLI del worker.
+
+Las **tarjetas del kanban no se han visto con datos**: el único prospecto de la
+base está descartado y los descartados no entran al pipeline. Lo verificado son
+las seis columnas, sus contadores y la barra de métricas. Las columnas se pintan
+aunque estén vacías a propósito — un tablero vacío sigue diciendo cuáles son las
+etapas, y sustituirlo por una frase lo esconde.
+
+El **mini mapa arrastrable** del formulario de zona (handoff §6.7) no está: los
+campos de centro y radio se escriben a mano. Los **filtros de responsable y
+periodo** del pipeline tampoco, porque no hay usuarios a quien asignar nada.
+
+El movimiento entre etapas va por un selector en cada tarjeta y no arrastrando.
+El handoff describe el arrastre para los bloques de la propuesta, no para el
+kanban, y un `select` funciona igual con teclado, con ratón y en pantalla
+estrecha.

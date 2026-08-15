@@ -489,6 +489,142 @@ export const getReviewedToday = cache(async (): Promise<number> => {
   return rows[0]?.n ?? 0;
 });
 
+// ─── Pipeline ────────────────────────────────────────────────────────────────
+
+export type PipelineStage =
+  | "detected"
+  | "reviewed"
+  | "proposal_sent"
+  | "meeting"
+  | "won"
+  | "lost";
+
+export interface PipelineCard {
+  id: string;
+  name: string;
+  city: string;
+  sectors: Sector[];
+  score: number;
+  ticketEstimate: number;
+  stage: PipelineStage;
+  lastActivityAt: Date | null;
+  firstSeenAt: Date;
+}
+
+export interface PipelineMetrics {
+  inPipeline: number;
+  openValueUsd: number;
+  activeProposals: number;
+  wonThisQuarter: number;
+  wonValueUsd: number;
+}
+
+/** Todo lo que entra en el kanban: los prospectos no descartados. */
+export const listPipeline = cache(async (): Promise<PipelineCard[]> => {
+  const rows = await db
+    .select({
+      id: prospectsTable.id,
+      name: prospectsTable.name,
+      city: prospectsTable.city,
+      sectors: prospectsTable.sectors,
+      score: prospectsTable.score,
+      ticketEstimate: prospectsTable.ticketEstimate,
+      stage: prospectsTable.stage,
+      lastActivityAt: prospectsTable.lastActivityAt,
+      firstSeenAt: prospectsTable.firstSeenAt,
+    })
+    .from(prospectsTable)
+    .where(eq(prospectsTable.disqualified, false))
+    .orderBy(desc(prospectsTable.score));
+
+  return rows;
+});
+
+/**
+ * Las cinco cifras de la barra superior.
+ *
+ * "Valor abierto" excluye ganados y perdidos a propósito: es lo que sigue vivo,
+ * no lo que pasó por aquí. Una barra que suma lo cerrado infla el número justo
+ * cuando más se mira.
+ */
+export const getPipelineMetrics = cache(async (): Promise<PipelineMetrics> => {
+  const cards = await listPipeline();
+  const open = cards.filter((c) => c.stage !== "won" && c.stage !== "lost");
+
+  const [proposalRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(proposalsTable)
+    .where(sql`${proposalsTable.status} <> 'rejected'`);
+
+  const quarterStart = new Date();
+  quarterStart.setMonth(Math.floor(quarterStart.getMonth() / 3) * 3, 1);
+  quarterStart.setHours(0, 0, 0, 0);
+
+  const won = cards.filter(
+    (c) => c.stage === "won" && (c.lastActivityAt ?? c.firstSeenAt) >= quarterStart,
+  );
+
+  return {
+    inPipeline: open.length,
+    openValueUsd: open.reduce((sum, c) => sum + c.ticketEstimate, 0),
+    activeProposals: proposalRow?.n ?? 0,
+    wonThisQuarter: won.length,
+    wonValueUsd: won.reduce((sum, c) => sum + c.ticketEstimate, 0),
+  };
+});
+
+// ─── Zonas ───────────────────────────────────────────────────────────────────
+
+export interface ZoneRow extends ZoneSummary {
+  county: County;
+  schedule: string | null;
+  active: boolean;
+  lastScanProspects: number | null;
+  lastScanCostUsd: number | null;
+  prospectCount: number;
+}
+
+/** La tabla de la vista de Zonas, con el recuento real de cada una. */
+export const listZones = cache(async (): Promise<ZoneRow[]> => {
+  const rows = await db
+    .select({
+      id: zones.id,
+      name: zones.name,
+      county: zones.county,
+      centerLat: zones.centerLat,
+      centerLng: zones.centerLng,
+      radiusMeters: zones.radiusMeters,
+      sectors: zones.sectors,
+      minTicketUsd: zones.minTicketUsd,
+      schedule: zones.schedule,
+      active: zones.active,
+      lastScanAt: zones.lastScanAt,
+      lastScanProspects: zones.lastScanProspects,
+      lastScanCostUsd: zones.lastScanCostUsd,
+    })
+    .from(zones)
+    .orderBy(desc(zones.active), zones.name);
+
+  /*
+   * El recuento va aparte y no como subconsulta correlacionada dentro del
+   * `select`: esa forma devolvía 0 con datos que sí existían. Dos consultas y
+   * un `Map` es el mismo patrón que usa `listProspects`, y este sí se puede
+   * comprobar de un vistazo.
+   */
+  const counts = await db
+    .select({ zoneId: prospectsTable.zoneId, n: sql<number>`count(*)::int` })
+    .from(prospectsTable)
+    .groupBy(prospectsTable.zoneId);
+
+  const byZone = new Map(counts.map((c) => [c.zoneId, c.n]));
+
+  return rows.map((z) => ({
+    ...z,
+    lastScanCostUsd: z.lastScanCostUsd === null ? null : Number(z.lastScanCostUsd),
+    prospectCount: byZone.get(z.id) ?? 0,
+  }));
+});
+
 /** El escaneo más reciente de la zona: alimenta el panel de progreso y la hora. */
 export const getLatestScan = cache(async (zoneId: string): Promise<ScanSummary | null> => {
   const rows = await db
