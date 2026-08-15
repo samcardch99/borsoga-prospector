@@ -9,40 +9,53 @@ import { usePathname } from "next/navigation";
  * Las siete pestañas están desde el principio porque son el mapa mental de la
  * herramienta, pero solo se enlazan las que existen. Una pestaña que navega a
  * una pantalla vacía miente más que una pestaña visiblemente pendiente, así que
- * las no construidas van apagadas y dicen en qué paso llegan.
+ * las no construidas van apagadas y dicen por qué.
  */
 
 interface Tab {
   label: string;
   href?: string;
   count?: number;
-  /** Paso del orden de construcción en el que llega, si aún no existe. */
-  pendingStep?: number;
+  /** Por qué no se puede pinchar todavía. */
+  pendingNote?: string;
+  /** Coincide con esta ruta además de con `href`. */
+  matchPrefix?: string;
 }
 
 export function TabBar({
   counts,
   lastScanLabel,
+  expedienteHref,
 }: {
   counts: { review: number; proposals: number; pipeline: number };
   lastScanLabel: string | null;
+  /**
+   * El expediente es de *un* prospecto, así que la pestaña solo lleva a algún
+   * sitio cuando hay uno elegido. Sin selección se queda apagada explicándolo,
+   * que es más honesto que llevar a una pantalla que pregunta lo mismo.
+   */
+  expedienteHref?: string | null;
 }) {
   const pathname = usePathname();
 
   const tabs: Tab[] = [
     { label: "Mapa", href: "/" },
-    { label: "Revisión", count: counts.review, pendingStep: 6 },
-    { label: "Expediente", pendingStep: 5 },
-    { label: "Propuestas", count: counts.proposals, pendingStep: 7 },
-    { label: "Pipeline", count: counts.pipeline, pendingStep: 8 },
-    { label: "Traza", pendingStep: 5 },
-    { label: "Zonas", pendingStep: 8 },
+    { label: "Revisión", count: counts.review, pendingNote: "Llega en el paso 6" },
+    expedienteHref
+      ? { label: "Expediente", href: expedienteHref, matchPrefix: "/expediente" }
+      : { label: "Expediente", pendingNote: "Elige antes un prospecto en el mapa" },
+    { label: "Propuestas", count: counts.proposals, pendingNote: "Llega en el paso 7" },
+    { label: "Pipeline", count: counts.pipeline, pendingNote: "Llega en el paso 8" },
+    { label: "Traza", pendingNote: "La traza se escribe ya en la base; la pantalla viene después" },
+    { label: "Zonas", pendingNote: "Llega en el paso 8" },
   ];
 
   return (
     <nav className="flex h-10 shrink-0 items-center gap-1 border-b border-line bg-panel px-3">
       {tabs.map((tab) => {
-        const active = tab.href !== undefined && pathname === tab.href;
+        const active =
+          (tab.href !== undefined && pathname === tab.href) ||
+          (tab.matchPrefix !== undefined && pathname.startsWith(tab.matchPrefix));
 
         const content = (
           <>
@@ -72,7 +85,7 @@ export function TabBar({
         return (
           <span
             key={tab.label}
-            title={`Llega en el paso ${tab.pendingStep} del orden de construcción`}
+            title={tab.pendingNote}
             className="flex h-7 cursor-not-allowed items-center rounded-[7px] px-2.5 text-base whitespace-nowrap opacity-45"
             style={{ color: "var(--muted)" }}
           >

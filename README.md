@@ -223,7 +223,7 @@ Del handoff §12, adaptado al enfoque agéntico:
 2. ~~Tokens de diseño y tema~~ ✅
 3. ~~Worker: herramientas del agente + `LLMProvider` + Traza~~ ✅
 4. ~~Mapa + lista + expediente resumido con datos reales~~ ✅
-5. Expediente completo con evidencia y capturas
+5. ~~Expediente completo con evidencia y capturas~~ ✅
 6. Cola de revisión con veredictos y reverificación
 7. Generador de propuesta: configurar y PDF, luego modo edición
 8. Pipeline y zonas programadas
@@ -262,7 +262,23 @@ El **control de zoom** solo aparece con el mapa real, que trae el suyo. En el
 lienzo de reserva no hay nada que ampliar, así que ese hueco lo ocupa el aviso
 de que los tiles no cargaron.
 
-Los botones "Abrir expediente", "Generar propuesta", "Escanear zona" y "Dibujar
-área" están visibles y apagados, con la pista de en qué paso llegan. Se dejan
-en su sitio en vez de esconderlos porque son parte del layout que hay que
-recrear, y un hueco cambiaría las medidas de las columnas.
+Los botones "Generar propuesta", "Escanear zona" y "Dibujar área" están
+visibles y apagados, con la pista de en qué paso llegan. Se dejan en su sitio
+en vez de esconderlos porque son parte del layout que hay que recrear, y un
+hueco cambiaría las medidas de las columnas.
+
+### Qué falta del paso 5
+
+Las **capturas de evidencia no se han visto funcionando**. La ruta que las
+sirve existe (`/api/captura/…`, con el mismo anclaje al repositorio que usa el
+worker) y el expediente ya reserva su hueco, pero las evidencias que hay en la
+base salieron de `render_dom` y no llevan imagen: `screenshot_storage_key` está
+vacío en todas. La tarjeta lo dice en el hueco en vez de callárselo.
+
+`STORAGE_LOCAL_PATH` pasa a resolverse desde la **raíz del repositorio** y no
+desde el cwd. Antes el worker (que corre en `apps/worker`) y la web (en
+`apps/web`) apuntaban a carpetas distintas, así que la web nunca habría
+encontrado una captura.
+
+"Reverificar con IA" y "Descartar" quedan apagados: encolan `finding.recheck`,
+que el worker todavía rechaza. Llegan con el paso 6.

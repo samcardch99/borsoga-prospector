@@ -77,6 +77,7 @@ export default async function MapaPage({ searchParams }: PageProps<"/">) {
       <TabBar
         counts={navCounts}
         lastScanLabel={scan ? timeAgo(scan.startedAt) : null}
+        expedienteHref={selectedId ? `/expediente/${selectedId}` : null}
       />
 
       <main className="flex min-h-0 flex-1">

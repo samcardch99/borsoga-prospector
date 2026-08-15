@@ -8,6 +8,7 @@
  * "faltan hallazgos", no como un problema de layout, y cuesta encontrarlo.
  */
 
+import Link from "next/link";
 import { BRANCH_META, type Branch } from "@borsoga/shared";
 import type { Dossier, DossierFinding } from "@/lib/queries";
 import {
@@ -40,9 +41,12 @@ function Chip({ children, tone }: { children: React.ReactNode; tone?: "brand" | 
   );
 }
 
-function FindingLine({ finding }: { finding: DossierFinding }) {
+function FindingLine({ finding, prospectId }: { finding: DossierFinding; prospectId: string }) {
   return (
-    <div className="flex gap-2 border-t border-line-soft pt-2 first:border-0 first:pt-0">
+    <Link
+      href={`/expediente/${prospectId}#hallazgo-${finding.id}`}
+      className="-mx-1 flex gap-2 rounded-md border-t border-line-soft px-1 pt-2 transition-colors first:border-0 first:pt-0 hover:bg-hover"
+    >
       <span
         className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
         style={{ background: severityColor(finding.severity) }}
@@ -59,7 +63,7 @@ function FindingLine({ finding }: { finding: DossierFinding }) {
           {finding.evidenceUrl}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -68,11 +72,13 @@ function BranchCard({
   findings,
   score,
   ticket,
+  prospectId,
 }: {
   branch: Branch;
   findings: DossierFinding[];
   score: number;
   ticket: number;
+  prospectId: string;
 }) {
   const meta = BRANCH_META[branch];
   const shown = findings.slice(0, MAX_PER_BRANCH);
@@ -102,7 +108,7 @@ function BranchCard({
 
       <div className="mt-2 flex flex-col gap-2">
         {shown.map((f) => (
-          <FindingLine key={f.id} finding={f} />
+          <FindingLine key={f.id} finding={f} prospectId={prospectId} />
         ))}
         {hidden > 0 && (
           <p className="text-2xs" style={{ color: "var(--dim2)" }}>
@@ -202,6 +208,7 @@ export function DossierSummary({ dossier }: { dossier: Dossier | null }) {
                 findings={b.findings}
                 score={b.score}
                 ticket={b.ticket}
+                prospectId={dossier.id}
               />
             ))}
 
@@ -232,15 +239,13 @@ export function DossierSummary({ dossier }: { dossier: Dossier | null }) {
          * parte del diseño de esta columna, y esconderlas cambiaría el layout
          * que hay que recrear.
          */}
-        <button
-          type="button"
-          disabled
-          title="El expediente completo llega en el paso 5"
-          className="h-8 flex-1 cursor-not-allowed rounded-md text-base whitespace-nowrap opacity-45"
+        <Link
+          href={`/expediente/${dossier.id}`}
+          className="grid h-8 flex-1 place-items-center rounded-md text-base whitespace-nowrap transition-colors"
           style={{ background: "var(--btn-bg)", color: "var(--btn-fg)" }}
         >
           Abrir expediente
-        </button>
+        </Link>
         <button
           type="button"
           disabled

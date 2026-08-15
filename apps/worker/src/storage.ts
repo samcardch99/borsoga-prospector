@@ -19,7 +19,15 @@ export interface StoredScreenshot {
   takenAt: string;
 }
 
-const root = resolve(process.cwd(), config.STORAGE_LOCAL_PATH);
+/**
+ * La raíz del almacén se ancla al repositorio, no al cwd.
+ *
+ * El worker corre desde `apps/worker` y la web desde `apps/web`, así que un
+ * `./storage` relativo al cwd daba dos carpetas distintas: el worker escribía
+ * capturas que la web no podía encontrar nunca. Anclando ambos a la raíz del
+ * monorepo hay un solo almacén, que es lo que se quería decir.
+ */
+const root = resolve(process.cwd(), "../..", config.STORAGE_LOCAL_PATH);
 
 /** Clave estable y sin datos del sistema de archivos del prospecto. */
 function keyFor(scanId: string, url: string, width: number): string {

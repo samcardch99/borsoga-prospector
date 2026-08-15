@@ -22,7 +22,14 @@ import {
   scans,
   zones,
 } from "@borsoga/db";
-import type { Branch, DisqualifyReason, Sector, Severity, Verdict } from "@borsoga/shared";
+import type {
+  Branch,
+  County,
+  DisqualifyReason,
+  Sector,
+  Severity,
+  Verdict,
+} from "@borsoga/shared";
 
 // ─── Formas que consume la interfaz ──────────────────────────────────────────
 
@@ -271,6 +278,118 @@ export const getDossier = cache(async (prospectId: string): Promise<Dossier | nu
     branchScores: (p.branchScores ?? {}) as Partial<Record<Branch, number>>,
     branchTickets: (p.branchTickets ?? {}) as Partial<Record<Branch, number>>,
     findings: found,
+  };
+});
+
+/** La evidencia entera de un hallazgo, tal y como la pide el handoff §6.2. */
+export interface FullEvidence {
+  url: string;
+  quote: string;
+  layer: "served_html" | "rendered_dom" | "both_equal" | "mismatch" | "external_source";
+  method: string;
+  capturedAt: Date;
+  screenshotStorageKey: string | null;
+  screenshotWidth: number | null;
+  screenshotHeight: number | null;
+  screenshotTakenAt: Date | null;
+}
+
+export interface FullFinding extends DossierFinding {
+  description: string;
+  clientGain: string;
+  verifiedAt: Date;
+  recheckCount: number;
+  reviewNote: string | null;
+  evidence: FullEvidence;
+}
+
+export interface FullDossier extends Dossier {
+  sectors: Sector[];
+  county: County;
+  phone: string | null;
+  commercialViability: string;
+  lastScannedAt: Date;
+  stage: string;
+  fullFindings: FullFinding[];
+}
+
+/**
+ * El expediente completo. Es la misma entidad que `getDossier` pero con la
+ * evidencia entera —cita, capa, método, captura— que el resumen no necesita y
+ * que aquí es el contenido principal de la pantalla.
+ */
+export const getFullDossier = cache(async (prospectId: string): Promise<FullDossier | null> => {
+  const base = await getDossier(prospectId);
+  if (!base) return null;
+
+  const rows = await db
+    .select()
+    .from(prospectsTable)
+    .where(eq(prospectsTable.id, prospectId))
+    .limit(1);
+
+  const p = rows[0];
+  if (!p) return null;
+
+  const found = await db
+    .select({
+      id: findingsTable.id,
+      branch: findingsTable.branch,
+      severity: findingsTable.severity,
+      verdict: findingsTable.verdict,
+      title: findingsTable.title,
+      description: findingsTable.description,
+      clientGain: findingsTable.clientGain,
+      verifiedAt: findingsTable.verifiedAt,
+      recheckCount: findingsTable.recheckCount,
+      reviewNote: findingsTable.reviewNote,
+      evidenceUrl: evidenceTable.url,
+      quote: evidenceTable.quote,
+      layer: evidenceTable.layer,
+      method: evidenceTable.method,
+      capturedAt: evidenceTable.capturedAt,
+      screenshotStorageKey: evidenceTable.screenshotStorageKey,
+      screenshotWidth: evidenceTable.screenshotWidth,
+      screenshotHeight: evidenceTable.screenshotHeight,
+      screenshotTakenAt: evidenceTable.screenshotTakenAt,
+    })
+    .from(findingsTable)
+    .innerJoin(evidenceTable, eq(findingsTable.evidenceId, evidenceTable.id))
+    .where(eq(findingsTable.prospectId, prospectId))
+    .orderBy(findingsTable.severity, desc(findingsTable.detectedAt));
+
+  return {
+    ...base,
+    sectors: p.sectors,
+    county: p.county,
+    phone: p.phone,
+    commercialViability: p.commercialViability,
+    lastScannedAt: p.lastScannedAt,
+    stage: p.stage,
+    fullFindings: found.map((f) => ({
+      id: f.id,
+      branch: f.branch,
+      severity: f.severity,
+      verdict: f.verdict,
+      title: f.title,
+      evidenceUrl: f.evidenceUrl,
+      description: f.description,
+      clientGain: f.clientGain,
+      verifiedAt: f.verifiedAt,
+      recheckCount: f.recheckCount,
+      reviewNote: f.reviewNote,
+      evidence: {
+        url: f.evidenceUrl,
+        quote: f.quote,
+        layer: f.layer,
+        method: f.method,
+        capturedAt: f.capturedAt,
+        screenshotStorageKey: f.screenshotStorageKey,
+        screenshotWidth: f.screenshotWidth,
+        screenshotHeight: f.screenshotHeight,
+        screenshotTakenAt: f.screenshotTakenAt,
+      },
+    })),
   };
 });
 

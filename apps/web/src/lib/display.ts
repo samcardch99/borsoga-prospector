@@ -75,6 +75,20 @@ export const VERDICT_LABEL: Record<Verdict, string> = {
   discarded: "Descartado",
 };
 
+/**
+ * La capa de la evidencia. No es un detalle técnico: distingue lo que ve el
+ * buscador de lo que ve el usuario, y es una regla del auditor (handoff §5).
+ * `mismatch` es el caso que más vende — el sitio le enseña una cosa a Google y
+ * otra a la persona.
+ */
+export const EVIDENCE_LAYER_LABEL: Record<string, string> = {
+  served_html: "HTML servido",
+  rendered_dom: "DOM renderizado",
+  both_equal: "Servido y renderizado coinciden",
+  mismatch: "Servido ≠ renderizado",
+  external_source: "Fuente externa",
+};
+
 export const ICP_FIT_LABEL: Record<"high" | "medium" | "low", string> = {
   high: "Encaje ICP alto",
   medium: "Encaje ICP medio",
