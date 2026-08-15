@@ -104,6 +104,31 @@ pnpm --filter @borsoga/worker enqueue prospect "Nombre" https://ejemplo.com Miam
 
 ---
 
+## El build de producción usa webpack, no Turbopack
+
+`pnpm build` pasa `--webpack`. `next dev` sigue en Turbopack, que va bien.
+
+El motivo es un fallo concreto y comprobado: Turbopack resuelve `next/font/google`
+en su binario nativo y pide a `fonts.gstatic.com` URLs de JetBrains Mono que hoy
+devuelven **404**. Las mismas fuentes pedidas al CSS de Google en vivo devuelven
+200, así que no es que las fuentes hayan desaparecido — es que Turbopack tiene
+una instantánea desfasada. El build entero se cae con doce errores de
+`Module not found` que apuntan a un `.module.css` interno y no dicen nada de
+fuentes.
+
+```
+# la URL que pide Turbopack
+…/jetbrainsmono/v24/…BNntkaToggR7BYaTNPx7cwgknk-6nFg.woff2   → 404
+# la que sirve Google ahora mismo
+…/jetbrainsmono/v24/…BNntkaToggR7BYRbKPx3cwgknk-6nFg.woff2   → 200
+```
+
+Con webpack, que pide el CSS en vivo, el build pasa limpio.
+
+**Cuándo quitarlo:** cuando una versión de Next traiga la instantánea al día.
+Se comprueba en un minuto — quita `--webpack` y lanza `pnpm build`. Si pasa, el
+fallo está arreglado y la bandera sobra.
+
 ## Decisiones que se apartan del handoff
 
 ### 1. Arquitectura agéntica en vez de pipeline determinista
