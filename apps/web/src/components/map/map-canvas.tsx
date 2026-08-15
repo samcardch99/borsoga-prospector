@@ -15,7 +15,7 @@
  * expediente son lo que se trabaja.
  */
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Layer,
@@ -23,13 +23,14 @@ import {
   Marker,
   NavigationControl,
   Source,
+  type MapRef,
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection } from "geojson";
 import { BRANCH_META, type Branch } from "@borsoga/shared";
 import type { ProspectRow, ScanSummary, ZoneSummary } from "@/lib/queries";
 import { branchColor, money, moneyExact, scoreColor, scoreSurface } from "@/lib/display";
-import { buildMapStyle } from "@/lib/map-style";
+import { applyMapPalette, buildMapStyle } from "@/lib/map-style";
 import { useMapPalette } from "@/lib/use-map-palette";
 
 type ColorMode = "score" | "branch" | "ticket" | "crm";
@@ -263,8 +264,20 @@ export function MapCanvas({
   const router = useRouter();
   const searchParams = useSearchParams();
   const palette = useMapPalette();
+  const mapRef = useRef<MapRef>(null);
 
-  const mapStyle = useMemo(() => buildMapStyle(palette), [palette]);
+  /*
+   * El estilo se construye UNA vez. Reemplazarlo en cada cambio de tema hacía
+   * que MapLibre desmontase las fuentes y volviera a montarlas, y en ese hueco
+   * pintaba un fotograma con la cámara equivocada — un salto muy visible al
+   * pulsar la luna. El tema se aplica después, cambiando solo los colores.
+   */
+  const [mapStyle] = useState(() => buildMapStyle(palette));
+
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (map) applyMapPalette(map, palette);
+  }, [palette]);
 
   const select = useCallback(
     (id: string) => {
@@ -338,6 +351,7 @@ export function MapCanvas({
   return (
     <div className="relative flex-1">
       <MapLibreMap
+        ref={mapRef}
         initialViewState={{
           longitude: zone.centerLng,
           latitude: zone.centerLat,
@@ -345,6 +359,10 @@ export function MapCanvas({
         }}
         mapStyle={mapStyle}
         attributionControl={{ compact: true }}
+        // El estilo se construyó con la paleta del primer render, que en la
+        // hidratación puede ser todavía la del servidor. Repintar al cargar deja
+        // el mapa en el tema correcto sin esperar a un cambio.
+        onLoad={(e) => applyMapPalette(e.target, palette)}
         onError={() => setTilesFailed(true)}
         style={{ width: "100%", height: "100%" }}
       >

@@ -14,7 +14,11 @@
  * cual, el mapa se invierte solo al cambiar de tema.
  */
 
-import type { StyleSpecification } from "maplibre-gl";
+import type {
+  FilterSpecification,
+  Map as MapLibreMapInstance,
+  StyleSpecification,
+} from "maplibre-gl";
 
 /** Tiles vectoriales de OpenFreeMap: sin clave, sin registro, uso comercial. */
 const TILES_URL = "https://tiles.openfreemap.org/planet";
@@ -22,6 +26,34 @@ const GLYPHS_URL = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf"
 
 /** La única familia que sirve OpenFreeMap. Las etiquetas del mapa son suyas. */
 const FONT = ["Noto Sans Regular"];
+
+/**
+ * Qué sitios merecen etiqueta.
+ *
+ * Dos cortes, y los dos salieron de mirar la pantalla. `rank` es el orden de
+ * importancia que trae el propio tileset, así que cortar por 12 deja los
+ * sitios que sirven de referencia y descarta la cola larga.
+ *
+ * El segundo corte es el que de verdad limpia el mapa: fuera el transporte y
+ * el aparcamiento. Cada boca de metro y cada parada de autobús es un POI
+ * distinto con el mismo nombre, así que sin este filtro "Brickell Station"
+ * aparecía cuatro veces sobre la misma manzana y el marcador del prospecto se
+ * perdía entre ellas. Para prospección comercial no aportan nada.
+ */
+const POI_FILTER: FilterSpecification = [
+  "all",
+  ["<=", ["get", "rank"], 12],
+  [
+    "!",
+    [
+      "match",
+      ["get", "class"],
+      ["bus", "railway", "ferry_terminal", "parking", "bicycle", "car"],
+      true,
+      false,
+    ],
+  ],
+] as const;
 
 export interface MapPalette {
   bg: string;
@@ -33,6 +65,10 @@ export interface MapPalette {
   block: string;
   label: string;
   labelHalo: string;
+  /** Etiquetas secundarias: calles y sitios. Un escalón por debajo de `label`. */
+  labelSoft: string;
+  /** El punto de los sitios. Decorativo, no lleva texto. */
+  poiDot: string;
   /**
    * El acento, para el área de búsqueda. MapLibre pinta en WebGL y no entiende
    * `var(--accent)`: los colores que le llegan tienen que estar ya resueltos.
@@ -48,8 +84,10 @@ const FALLBACK: MapPalette = {
   road2: "#e9e5de",
   road3: "#d4cfc5",
   block: "#d6d1c8",
-  label: "#6d737a",
-  labelHalo: "#f1efea",
+  label: "#41454a",
+  labelHalo: "#f6f4f0",
+  labelSoft: "#63686f",
+  poiDot: "#6d737a",
   accent: "#3a5a8c",
 };
 
@@ -75,17 +113,33 @@ export function readMapPalette(): MapPalette {
     road2: read("--road2", FALLBACK.road2),
     road3: read("--road3", FALLBACK.road3),
     block: read("--block", FALLBACK.block),
-    label: read("--dim", FALLBACK.label),
+    /*
+     * Las etiquetas NO usan `--dim` / `--dim2`. El propio README documenta que
+     * esos dos tokens no llegan a 4,5:1 contra los fondos claros, y sobre el
+     * mapa el problema es peor: compiten con calles y manzanas, no con un panel
+     * liso. Se suben un escalón, a `--text2` y `--muted`, que sí cumplen.
+     */
+    label: read("--text2", FALLBACK.label),
     labelHalo: read("--map-bg", FALLBACK.labelHalo),
+    labelSoft: read("--muted", FALLBACK.labelSoft),
+    poiDot: read("--dim", FALLBACK.poiDot),
     accent: read("--accent", FALLBACK.accent),
   };
 }
 
 /**
- * Un basemap deliberadamente callado. Los marcadores llevan el score y son lo
- * que hay que leer; si el mapa compite con ellos, la pantalla no se puede usar.
- * Por eso no hay POI, ni iconos, ni relieve: solo agua, suelo, manzanas, tres
- * niveles de vía y los nombres de población.
+ * Un basemap callado, pero no mudo.
+ *
+ * La primera versión no llevaba ninguna referencia —ni calles con nombre, ni
+ * sitios— con la idea de que nada compitiera con los marcadores de score. Visto
+ * en pantalla era un error: sin referencias no se sabe qué barrio se está
+ * mirando, y la pregunta que hace uno frente a esta pantalla es precisamente
+ * "¿dónde está este negocio?".
+ *
+ * El equilibrio es jerarquía, no ausencia. Los marcadores van en color de marca
+ * y a 29–38 px; las referencias van en gris (`--dim2`), pequeñas, y solo
+ * aparecen al acercarse. Los sitios además se filtran por `rank`, que es el
+ * orden de importancia que trae el propio tileset.
  */
 export function buildMapStyle(p: MapPalette): StyleSpecification {
   return {
@@ -136,8 +190,14 @@ export function buildMapStyle(p: MapPalette): StyleSpecification {
         minzoom: 13,
         paint: {
           "fill-color": p.block,
-          // Aparecen al acercarse, para que a poco zoom el mapa quede limpio.
-          "fill-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 15, 0.85],
+          /*
+           * Aparecen al acercarse, para que a poco zoom el mapa quede limpio.
+           * El tope es 0,55 y no 1: `--block` es ahora bastante más oscuro que
+           * el suelo —eso es lo que da el contraste— y a plena opacidad el
+           * centro de una ciudad se convierte en una mancha sólida que se come
+           * las calles.
+           */
+          "fill-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 15, 0.55],
         },
       },
       {
@@ -193,6 +253,125 @@ export function buildMapStyle(p: MapPalette): StyleSpecification {
           "text-halo-width": 1.2,
         },
       },
+      {
+        id: "agua-nombres",
+        type: "symbol",
+        source: "openmaptiles",
+        "source-layer": "water_name",
+        minzoom: 9,
+        layout: {
+          "text-field": ["get", "name"],
+          "text-font": FONT,
+          "text-size": 11,
+          "text-max-width": 8,
+        },
+        paint: {
+          "text-color": p.labelSoft,
+          "text-halo-color": p.labelHalo,
+          "text-halo-width": 1.2,
+        },
+      },
+      {
+        id: "calles",
+        type: "symbol",
+        source: "openmaptiles",
+        "source-layer": "transportation_name",
+        minzoom: 14,
+        layout: {
+          "text-field": ["get", "name"],
+          "text-font": FONT,
+          // Sobre la propia línea de la calle, como cualquier mapa de calle.
+          "symbol-placement": "line",
+          "text-size": 10,
+          "text-letter-spacing": 0.02,
+          "text-padding": 2,
+        },
+        paint: {
+          "text-color": p.labelSoft,
+          "text-halo-color": p.labelHalo,
+          "text-halo-width": 1.4,
+        },
+      },
+      {
+        id: "sitios-punto",
+        type: "circle",
+        source: "openmaptiles",
+        "source-layer": "poi",
+        minzoom: 15,
+        filter: POI_FILTER,
+        paint: {
+          "circle-radius": 2,
+          "circle-color": p.poiDot,
+        },
+      },
+      {
+        id: "sitios",
+        type: "symbol",
+        source: "openmaptiles",
+        "source-layer": "poi",
+        minzoom: 15,
+        filter: POI_FILTER,
+        layout: {
+          "text-field": ["get", "name"],
+          "text-font": FONT,
+          "text-size": 10,
+          "text-anchor": "top",
+          "text-offset": [0, 0.6],
+          "text-max-width": 9,
+          // Que se caiga la etiqueta antes que taparse con otra.
+          "text-optional": true,
+        },
+        paint: {
+          "text-color": p.labelSoft,
+          "text-halo-color": p.labelHalo,
+          "text-halo-width": 1.4,
+        },
+      },
     ],
   };
+}
+
+/** Qué token pinta cada capa. Es la tabla que usan el estilo y el repintado. */
+const PAINT_BINDINGS: ReadonlyArray<
+  readonly [layer: string, property: string, token: keyof MapPalette]
+> = [
+  ["fondo", "background-color", "bg"],
+  ["suelo", "fill-color", "island"],
+  ["parques", "fill-color", "island"],
+  ["agua", "fill-color", "water"],
+  ["cauces", "line-color", "water"],
+  ["manzanas", "fill-color", "block"],
+  ["vias-menores", "line-color", "road2"],
+  ["vias-secundarias", "line-color", "road1"],
+  ["vias-principales", "line-color", "road3"],
+  ["poblaciones", "text-color", "label"],
+  ["poblaciones", "text-halo-color", "labelHalo"],
+  ["agua-nombres", "text-color", "labelSoft"],
+  ["agua-nombres", "text-halo-color", "labelHalo"],
+  ["calles", "text-color", "labelSoft"],
+  ["calles", "text-halo-color", "labelHalo"],
+  ["sitios", "text-color", "labelSoft"],
+  ["sitios", "text-halo-color", "labelHalo"],
+  ["sitios-punto", "circle-color", "poiDot"],
+];
+
+/**
+ * Repinta el mapa con otra paleta **sin** reemplazar el estilo.
+ *
+ * La alternativa obvia —pasarle a MapLibre un style JSON nuevo cada vez que
+ * cambia el tema— funciona, pero `setStyle` desmonta las fuentes y las vuelve a
+ * montar: durante ese hueco el mapa se queda sin tiles y pinta un fotograma
+ * equivocado antes de recolocarse. Se ve como un salto feo justo al pulsar la
+ * luna.
+ *
+ * Cambiar solo las propiedades de pintado no toca las fuentes ni los tiles ya
+ * descargados, así que el cambio de tema es instantáneo y sin parpadeo.
+ */
+export function applyMapPalette(map: MapLibreMapInstance, p: MapPalette): void {
+  if (!map.isStyleLoaded()) return;
+
+  for (const [layer, property, token] of PAINT_BINDINGS) {
+    if (!map.getLayer(layer)) continue;
+    map.setPaintProperty(layer, property, p[token]);
+  }
 }

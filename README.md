@@ -59,6 +59,30 @@ en ningún sitio: ya está en los tokens. En claro `--block` es más oscuro que
 `--island`; en oscuro, más claro que `--map-bg`. Al leerlos tal cual, el mapa se
 invierte solo.
 
+#### La rampa del mapa se ha reajustado
+
+Los valores del prototipo vivían todos dentro de unos 30 niveles de gris, y
+sobre pantalla el mapa salía plano: el agua no se distinguía del suelo y las
+calles no se leían. Se ha ensanchado la rampa en los dos temas, conservando el
+orden que pide el handoff §9 y el carácter neutro cálido:
+
+- El **agua** gana tono azul (`#b9cfda` claro, `#16323f` oscuro) en vez de
+  depender solo del brillo. Es la separación que más se nota.
+- El **oscuro deja de ser casi negro**: `--map-bg` sube de `#101317` a
+  `#1c2126`, y la rampa se abre hacia arriba, que es como se invierte en
+  oscuro (calles más claras que el suelo).
+- Las **manzanas** se pintan al 55 % de opacidad, no al 85 %: `--block` es
+  ahora bastante más oscuro y a plena opacidad el centro de una ciudad se
+  convierte en una mancha sólida que se come las calles.
+
+Las **etiquetas del mapa no usan `--dim` ni `--dim2`**, por el problema de
+contraste que ya documenta el aviso de más abajo: sobre el mapa es peor todavía,
+porque compiten con calles y manzanas en vez de con un panel liso. Usan
+`--text2` para poblaciones y `--muted` para calles y sitios.
+
+Es una desviación consciente de "los colores son finales". Si se quiere revertir,
+está todo en el bloque de mapa de `theme.css` y el estilo lo recoge solo.
+
 Si los tiles no cargan —sin red, o el servicio caído— se cae al lienzo de
 referencia con los prospectos proyectados sobre el área, y lo dice en pantalla.
 OpenFreeMap es un servicio gratuito de mejor esfuerzo; si algún día importa la
