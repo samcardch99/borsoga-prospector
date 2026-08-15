@@ -10,9 +10,15 @@
  * El cálculo sí es deliberado: el ticket sale del score de la rama, porque un
  * problema más grave es más trabajo. Va de la mitad del importe base cuando la
  * rama apenas puntúa a una vez y media cuando está saturada.
+ *
+ * Vive en `shared` y no en el worker porque el score se recalcula en dos sitios:
+ * cuando el agente audita y cuando un humano cambia un veredicto en la cola de
+ * revisión. Dos copias de esta tabla darían dos tickets distintos para el mismo
+ * prospecto según quién tocó el dato el último.
  */
 
-import { BRANCHES, type Branch } from "@borsoga/shared";
+import { BRANCHES } from "./scoring";
+import type { Branch } from "./types";
 
 export const BASE_TICKET_USD: Record<Branch, number> = {
   renders: 8_000,

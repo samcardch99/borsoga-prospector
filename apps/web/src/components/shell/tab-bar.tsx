@@ -40,7 +40,7 @@ export function TabBar({
 
   const tabs: Tab[] = [
     { label: "Mapa", href: "/" },
-    { label: "Revisión", count: counts.review, pendingNote: "Llega en el paso 6" },
+    { label: "Revisión", href: "/revision", count: counts.review },
     expedienteHref
       ? { label: "Expediente", href: expedienteHref, matchPrefix: "/expediente" }
       : { label: "Expediente", pendingNote: "Elige antes un prospecto en el mapa" },

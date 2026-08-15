@@ -11,6 +11,7 @@ import { claimJobs, completeJob, db, failJob, pgClient, reapStaleJobs } from "@b
 import type { ClaimedJob } from "@borsoga/db";
 import { config } from "./config";
 import { auditProspect, type AuditProspectPayload } from "./handlers/audit-prospect";
+import { recheckFinding, type RecheckFindingPayload } from "./handlers/recheck-finding";
 import { scanZone, type ScanZonePayload } from "./handlers/scan-zone";
 import { errorMessage, log } from "./log";
 import { closeBrowser } from "./tools";
@@ -24,6 +25,8 @@ async function dispatch(job: ClaimedJob): Promise<void> {
       return scanZone(job.payload as ScanZonePayload);
     case "audit.prospect":
       return auditProspect(job.payload as AuditProspectPayload, shutdown.signal);
+    case "finding.recheck":
+      return recheckFinding(job.payload as RecheckFindingPayload, shutdown.signal);
     default:
       throw new Error(`tipo de trabajo no soportado: ${job.kind}`);
   }

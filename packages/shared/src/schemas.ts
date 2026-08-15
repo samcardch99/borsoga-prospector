@@ -144,6 +144,43 @@ export const auditorOutputJsonSchema = (() => {
   return schema as Record<string, unknown>;
 })();
 
+// ─── Reverificación de un hallazgo ───────────────────────────────────────────
+
+/**
+ * La salida de un `finding.recheck`: mirar otra vez **un** hallazgo concreto.
+ *
+ * Fíjate en lo que NO lleva: veredicto. La regla del handoff §5 es que solo un
+ * humano mueve un hallazgo a confirmado, matizado o descartado, y una
+ * reverificación no es una excepción — devuelve el hallazgo a `pending` con
+ * prueba fresca para que alguien vuelva a decidir.
+ *
+ * `stillHolds` es la lectura del agente, no un veredicto: si dice que ya no se
+ * sostiene, el hallazgo se marca para no entrar en propuestas y espera igual a
+ * que un humano lo descarte.
+ */
+export const recheckOutputSchema = z.object({
+  stillHolds: z.boolean(),
+  /** Qué ha cambiado desde la última verificación, o por qué sigue igual. */
+  reasoning: z.string().min(1),
+  title: z.string().min(1).max(160),
+  description: z.string().min(1),
+  clientGain: z.string().min(1),
+  severity: severitySchema,
+  /** Sin ref no hay hallazgo, tampoco al reverificar. */
+  evidenceRef: z.string().min(1, "la reverificación cita una observación real"),
+  additionalEvidenceRefs: z.array(z.string().min(1)).optional(),
+});
+
+export type RecheckOutputParsed = z.infer<typeof recheckOutputSchema>;
+
+/** Mismo tratamiento que el del auditor: sin `$schema`. */
+export const recheckOutputJsonSchema = (() => {
+  const { $schema: _ignored, ...schema } = z.toJSONSchema(recheckOutputSchema, {
+    target: "draft-2020-12",
+  });
+  return schema as Record<string, unknown>;
+})();
+
 // ─── Acciones de revisión ────────────────────────────────────────────────────
 
 export const reviewActionSchema = z

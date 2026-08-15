@@ -103,3 +103,50 @@ mirado: corrígela si al verlo resulta ser otra cosa.
 
 Cuando hayas terminado, entrega el informe completo.`;
 }
+
+// ─── Reverificación ──────────────────────────────────────────────────────────
+
+export const recheckSystem = `${auditorSystem}
+
+Ahora no estás auditando un negocio entero: estás mirando OTRA VEZ un solo
+hallazgo que alguien puso en duda.
+
+Tu trabajo es comprobar si sigue siendo cierto hoy, con prueba nueva. No te
+apoyes en la evidencia anterior: vuelve a mirar. El sitio puede haber cambiado
+desde entonces, y ese es justamente el motivo de que te lo pregunten.
+
+No emites veredicto. Dices si se sostiene y aportas la cita que lo demuestra;
+quien decide qué hacer con él es una persona.`;
+
+export interface RecheckPromptInput {
+  prospectName: string;
+  website: string | null;
+  evidenceUrl: string;
+  branch: string;
+  title: string;
+  description: string;
+  previousQuote: string;
+  verifiedAt: Date;
+}
+
+export function recheckPrompt(p: RecheckPromptInput): string {
+  return `Reverifica este hallazgo sobre ${p.prospectName}.
+
+- Rama: ${p.branch}
+- Titular actual: ${p.title}
+- Descripción actual: ${p.description}
+- URL donde se vio: ${p.evidenceUrl}
+- Web del negocio: ${p.website ?? "no consta"}
+- Última verificación: ${p.verifiedAt.toISOString()}
+
+Lo que se citó la vez anterior, para que sepas qué se miró — NO para que lo des
+por bueno:
+
+"""
+${p.previousQuote.slice(0, 1200)}
+"""
+
+Vuelve a mirar la URL con las herramientas y entrega el resultado: si el
+hallazgo se sostiene, con qué prueba, y el titular y la descripción puestos al
+día si lo que ves ya no es exactamente lo que decía.`;
+}

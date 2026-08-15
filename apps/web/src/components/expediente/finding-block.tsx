@@ -20,6 +20,7 @@ import {
 } from "@/lib/display";
 import type { FullFinding } from "@/lib/queries";
 import { EvidenceCard } from "./evidence-card";
+import { RecheckButton } from "./recheck-button";
 
 function Tag({ label, color, background }: { label: string; color: string; background: string }) {
   return (
@@ -92,20 +93,7 @@ export function FindingBlock({ finding, now }: { finding: FullFinding; now: Date
         </div>
 
         <div className="mt-3 flex items-center gap-2">
-          {/*
-           * `finding.recheck` es un tipo de trabajo que la cola contempla y el
-           * worker todavía rechaza. Se deja el control en su sitio y apagado en
-           * vez de encolar algo que nadie va a atender.
-           */}
-          <button
-            type="button"
-            disabled
-            title="La reverificación llega en el paso 6, con la cola de revisión"
-            className="h-7 cursor-not-allowed rounded-md border border-line2 px-2.5 text-sm2 whitespace-nowrap opacity-45"
-            style={{ color: "var(--muted)" }}
-          >
-            Reverificar con IA
-          </button>
+          <RecheckButton findingId={finding.id} />
           <span className="font-mono text-2xs" style={{ color: "var(--dim2)" }}>
             verificado {timeAgo(finding.verifiedAt, now)}
           </span>

@@ -393,6 +393,102 @@ export const getFullDossier = cache(async (prospectId: string): Promise<FullDoss
   };
 });
 
+/** Los tres estados del filtro de la cola de revisión (handoff §6.3). */
+export type ReviewFilter = "pendientes" | "matizados" | "todos";
+
+export interface ReviewItem extends FullFinding {
+  prospectId: string;
+  prospectName: string;
+  prospectCity: string;
+}
+
+/**
+ * La cola de revisión: los hallazgos que esperan juicio humano.
+ *
+ * Orden por antigüedad, no por severidad. La IA propone y un humano decide, y
+ * lo que no se puede permitir es que un hallazgo se quede indefinidamente sin
+ * mirar porque siempre entran otros más graves por delante.
+ */
+export const listReviewQueue = cache(
+  async (filter: ReviewFilter = "pendientes"): Promise<ReviewItem[]> => {
+    const verdicts =
+      filter === "pendientes"
+        ? (["pending"] as const)
+        : filter === "matizados"
+          ? (["nuanced"] as const)
+          : (["pending", "nuanced", "confirmed", "discarded"] as const);
+
+    const rows = await db
+      .select({
+        id: findingsTable.id,
+        branch: findingsTable.branch,
+        severity: findingsTable.severity,
+        verdict: findingsTable.verdict,
+        title: findingsTable.title,
+        description: findingsTable.description,
+        clientGain: findingsTable.clientGain,
+        verifiedAt: findingsTable.verifiedAt,
+        recheckCount: findingsTable.recheckCount,
+        reviewNote: findingsTable.reviewNote,
+        prospectId: prospectsTable.id,
+        prospectName: prospectsTable.name,
+        prospectCity: prospectsTable.city,
+        evidenceUrl: evidenceTable.url,
+        quote: evidenceTable.quote,
+        layer: evidenceTable.layer,
+        method: evidenceTable.method,
+        capturedAt: evidenceTable.capturedAt,
+        screenshotStorageKey: evidenceTable.screenshotStorageKey,
+        screenshotWidth: evidenceTable.screenshotWidth,
+        screenshotHeight: evidenceTable.screenshotHeight,
+        screenshotTakenAt: evidenceTable.screenshotTakenAt,
+      })
+      .from(findingsTable)
+      .innerJoin(evidenceTable, eq(findingsTable.evidenceId, evidenceTable.id))
+      .innerJoin(prospectsTable, eq(findingsTable.prospectId, prospectsTable.id))
+      .where(inArray(findingsTable.verdict, [...verdicts]))
+      .orderBy(findingsTable.detectedAt);
+
+    return rows.map((f) => ({
+      id: f.id,
+      branch: f.branch,
+      severity: f.severity,
+      verdict: f.verdict,
+      title: f.title,
+      evidenceUrl: f.evidenceUrl,
+      description: f.description,
+      clientGain: f.clientGain,
+      verifiedAt: f.verifiedAt,
+      recheckCount: f.recheckCount,
+      reviewNote: f.reviewNote,
+      prospectId: f.prospectId,
+      prospectName: f.prospectName,
+      prospectCity: f.prospectCity,
+      evidence: {
+        url: f.evidenceUrl,
+        quote: f.quote,
+        layer: f.layer,
+        method: f.method,
+        capturedAt: f.capturedAt,
+        screenshotStorageKey: f.screenshotStorageKey,
+        screenshotWidth: f.screenshotWidth,
+        screenshotHeight: f.screenshotHeight,
+        screenshotTakenAt: f.screenshotTakenAt,
+      },
+    }));
+  },
+);
+
+/** Cuántos hallazgos se han revisado hoy. Va en el pie del rail derecho. */
+export const getReviewedToday = cache(async (): Promise<number> => {
+  const rows = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(findingsTable)
+    .where(sql`${findingsTable.reviewedAt} >= date_trunc('day', now())`);
+
+  return rows[0]?.n ?? 0;
+});
+
 /** El escaneo más reciente de la zona: alimenta el panel de progreso y la hora. */
 export const getLatestScan = cache(async (zoneId: string): Promise<ScanSummary | null> => {
   const rows = await db

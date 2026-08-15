@@ -224,7 +224,7 @@ Del handoff §12, adaptado al enfoque agéntico:
 3. ~~Worker: herramientas del agente + `LLMProvider` + Traza~~ ✅
 4. ~~Mapa + lista + expediente resumido con datos reales~~ ✅
 5. ~~Expediente completo con evidencia y capturas~~ ✅
-6. Cola de revisión con veredictos y reverificación
+6. ~~Cola de revisión con veredictos y reverificación~~ ✅
 7. Generador de propuesta: configurar y PDF, luego modo edición
 8. Pipeline y zonas programadas
 
@@ -280,5 +280,17 @@ desde el cwd. Antes el worker (que corre en `apps/worker`) y la web (en
 `apps/web`) apuntaban a carpetas distintas, así que la web nunca habría
 encontrado una captura.
 
-"Reverificar con IA" y "Descartar" quedan apagados: encolan `finding.recheck`,
-que el worker todavía rechaza. Llegan con el paso 6.
+"Descartar" el prospecto entero sigue apagado: llega con el pipeline, en el
+paso 8.
+
+### Qué falta del paso 6
+
+`finding.recheck` ya está implementado en el worker y encolado desde la web,
+pero **el handler no se ha visto correr**: hace falta el worker en marcha y un
+proveedor de LLM disponible, y la verificación de esta rama se hizo con el
+worker apagado. Lo que sí está probado es la mitad de la web — encolar deja el
+trabajo en la cola y devuelve el hallazgo a `pending`, que es justo lo que debe
+pasar con el worker parado.
+
+No hay usuarios ni sesiones, así que `findings.reviewed_by` se queda a null.
+Cuando los haya, se rellena en `apps/web/src/app/revision/actions.ts`.
