@@ -13,6 +13,7 @@
 import { eq, sql } from "drizzle-orm";
 import { db, enqueue, prospects, scans, zones } from "@borsoga/db";
 import type { County, Sector } from "@borsoga/shared";
+import { config } from "../config";
 import { log } from "../log";
 import { recordStep } from "../persist/trace";
 import { PlacesError, searchZone, type PlaceSummary } from "../tools/places";
@@ -88,6 +89,7 @@ export async function scanZone(payload: ScanZonePayload): Promise<void> {
 
   let queued = 0;
   let outOfArea = 0;
+  let skippedByCap = 0;
 
   for (const { place, sectors } of hits) {
     const county = countyOf(place);
@@ -134,8 +136,28 @@ export async function scanZone(payload: ScanZonePayload): Promise<void> {
 
     if (!row) continue;
 
+    /*
+     * El freno de gasto. El prospecto ya está guardado, así que no se pierde
+     * nada: simplemente no se audita en este escaneo. Sin esto, una zona con
+     * cien negocios encolaría cien auditorías y cada una puede costar hasta
+     * `LLM_MAX_COST_USD_PER_PROSPECT`.
+     */
+    if (queued >= config.SCAN_MAX_PROSPECTS) {
+      skippedByCap += 1;
+      continue;
+    }
+
     await enqueue(db, "audit.prospect", { scanId, prospectId: row.id }, { scanId, prospectId: row.id });
     queued += 1;
+  }
+
+  if (skippedByCap > 0) {
+    log.warn("tope de auditorías alcanzado", {
+      zona: zone.name,
+      auditados: queued,
+      guardadosSinAuditar: skippedByCap,
+      tope: config.SCAN_MAX_PROSPECTS,
+    });
   }
 
   await db

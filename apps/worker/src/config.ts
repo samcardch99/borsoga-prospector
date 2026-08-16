@@ -31,6 +31,19 @@ const envSchema = z.object({
   WORKER_ID: z.string().default(`worker-${process.pid}`),
   WORKER_POLL_MS: int.default(2_000),
 
+  /**
+   * Cuántos prospectos audita como mucho un escaneo de zona.
+   *
+   * Es el freno de gasto del sistema. Sin él, `scan.zone` encola una auditoría
+   * por cada negocio que devuelve Places, y cada auditoría puede llegar a
+   * `LLM_MAX_COST_USD_PER_PROSPECT`: una zona con cien negocios se convierte en
+   * una factura de tres cifras sin que nadie haya dicho que sí a eso.
+   *
+   * Los que sobran no se pierden: quedan guardados como prospectos sin auditar
+   * y se pueden encolar a mano o subiendo este número a propósito.
+   */
+  SCAN_MAX_PROSPECTS: int.default(25),
+
   CRAWL_USER_AGENT: z.string().default("BorsogaProspector/0.1 (+https://borsoga.studio/bot)"),
   CRAWL_REQUESTS_PER_SECOND: num.default(1),
   CRAWL_MAX_PAGES_PER_SITE: int.default(25),

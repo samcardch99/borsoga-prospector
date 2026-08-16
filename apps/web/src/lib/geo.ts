@@ -54,13 +54,20 @@ export function radiusHandle(area: Area): { lat: number; lng: number } {
   };
 }
 
-/** Distancia aproximada en metros entre dos puntos cercanos. */
+/**
+ * Distancia aproximada en metros entre dos puntos cercanos.
+ *
+ * La conversión de longitud usa la latitud **media** de los dos puntos y no la
+ * del primero. Con la del primero, `distancia(a, b)` y `distancia(b, a)` daban
+ * resultados distintos — poco, pero una distancia que depende del orden de los
+ * argumentos es una trampa esperando a que alguien la pise.
+ */
 export function distanceMeters(
   a: { lat: number; lng: number },
   b: { lat: number; lng: number },
 ): number {
   const dLat = (b.lat - a.lat) * M_PER_DEG_LAT;
-  const dLng = (b.lng - a.lng) * metersPerDegreeLng(a.lat);
+  const dLng = (b.lng - a.lng) * metersPerDegreeLng((a.lat + b.lat) / 2);
   return Math.sqrt(dLat * dLat + dLng * dLng);
 }
 
