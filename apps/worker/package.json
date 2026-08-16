@@ -7,7 +7,7 @@
     "dev": "node --env-file=../../.env --import tsx --watch src/index.ts",
     "start": "node --env-file=../../.env --import tsx src/index.ts",
     "enqueue": "node --env-file=../../.env --import tsx src/cli/enqueue.ts",
-    "test": "node --import tsx --test src/**/*.test.ts",
+    "test": "node --import tsx --test 'src/**/*.test.ts'",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
