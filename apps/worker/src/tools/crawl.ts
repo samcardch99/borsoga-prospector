@@ -177,6 +177,29 @@ export const crawlSiteTool: AgentTool<Input> = {
       return { ok: false, errorCode: "NOTHING_CRAWLED", message: `no se pudo recorrer ${startUrl}` };
     }
 
+    /*
+     * Un recorrido de una sola página que además no respondió 2xx no es un
+     * sitio pequeño: es un sitio al que no hemos entrado. Pasa con los muros
+     * anti-bot, que devuelven un 3xx en bucle o un reto de JavaScript.
+     *
+     * Se distingue a propósito. Sin esto el resumen decía "1 página · 0 rotas",
+     * que se lee como un sitio sano y diminuto, y el agente podía concluir que
+     * el negocio no tiene contenido cuando lo que pasa es que nos han cerrado
+     * la puerta.
+     */
+    const soloUna = pages.length === 1;
+    const primera = pages[0];
+    if (soloUna && primera && (primera.status < 200 || primera.status >= 300)) {
+      return {
+        ok: false,
+        errorCode: primera.status >= 300 && primera.status < 400 ? "REDIRECT_LOOP" : "BLOCKED",
+        message:
+          `${startUrl} respondió ${primera.status} y no dejó seguir ningún enlace. ` +
+          `Probablemente hay un muro anti-bot delante: lo que se vea de este sitio no ` +
+          `es lo que ve una persona.`,
+      };
+    }
+
     const broken = pages.filter((p) => p.status === 0 || p.status >= 400);
     const noDescription = pages.filter((p) => p.status < 400 && p.status > 0 && !p.description);
     const noTitle = pages.filter((p) => p.status < 400 && p.status > 0 && !p.title);

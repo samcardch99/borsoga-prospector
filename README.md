@@ -107,6 +107,42 @@ pnpm --filter @borsoga/worker enqueue prospect "Nombre" https://ejemplo.com Miam
 
 ---
 
+## El flujo completo, ejecutado de verdad
+
+Se recorrió entero el 16 de agosto de 2026 con el worker en marcha y
+`claude-code-local`: prospecto → auditoría del agente → hallazgos con evidencia
+→ revisión humana → propuesta → redacción con IA → documento listo para PDF.
+
+Lo que salió, con números:
+
+- La auditoría produjo **5 hallazgos** en 87 s por **$0,42**. Tres de los cinco
+  los encontró `lighthouse` (peso de 15 MB, accesibilidad en 87, caché mal
+  configurada), que es la herramienta que más se está ganando el sitio.
+- Confirmar tres hallazgos en la cola de revisión subió el score de **16 a 24**
+  y el ticket a **$18.000**. La revisión humana mueve el número, que era el
+  punto.
+- La propuesta se armó sola desde los hallazgos confirmados, con dos fases
+  derivadas del score de cada rama, y la IA redactó los dos bloques de texto.
+
+**El escaneo de zona no se pudo probar**: `GOOGLE_PLACES_API_KEY` está vacía en
+el `.env`, así que `scan.zone` falló sus cinco intentos y quedó en `failed` —el
+retroceso exponencial funcionó—. Todo lo demás del flujo se ejercitó con un
+prospecto creado a mano, que es para lo que existe `enqueue prospect`.
+
+### Dos cosas que aprendimos ejecutándolo
+
+**El tope de coste se queda corto con las herramientas nuevas.** Una auditoría
+reventó el límite de $2,50 llegando a $3,11 antes de entregar informe: `crawl_site`
+y `lighthouse` devuelven mucho más texto que las cuatro anteriores y el contexto
+crece rápido. La misma auditoría en otro run costó $0,42, así que la varianza es
+enorme —la cifra de `claude-code-local` es nocional y depende de la caché de
+prefijo—. Conviene revisar el tope, o recortar lo que devuelven las herramientas.
+
+**Un sitio detrás de un muro anti-bot no es un sitio pequeño.** `crawl_site`
+resumía un 307 en bucle como "1 página · 0 rotas", que se lee como un sitio sano
+y diminuto; ahora devuelve `REDIRECT_LOOP` o `BLOCKED` y dice que lo que se vea
+de ese sitio no es lo que ve una persona.
+
 ## El build de producción usa webpack, no Turbopack
 
 `pnpm build` pasa `--webpack`. `next dev` sigue en Turbopack, que va bien.
