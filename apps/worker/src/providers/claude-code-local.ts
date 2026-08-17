@@ -72,7 +72,22 @@ export const claudeCodeLocalProvider: LLMProvider = {
       alwaysLoad: true,
     });
 
-    const allowed = new Set(args.tools.map((t) => qualify(t.name)));
+    /*
+     * `WebSearch` es la única integrada que se enciende, y se enciende porque
+     * la app quiere que el auditor investigue como investiga una persona con
+     * Claude: buscar dónde está la mención, la nota de prensa o el perfil.
+     *
+     * Lo que NO cambia es de dónde sale la evidencia. Una búsqueda no pasa por
+     * `observe()`, así que no produce `Observation` y no se puede citar. Sirve
+     * para encontrar la URL; leerla y citarla sigue siendo trabajo de
+     * `fetch_served_html` o `render_dom`. Buscar libre, citar con disciplina.
+     */
+    const builtIns = config.LLM_WEB_SEARCH ? (["WebSearch"] as const) : ([] as const);
+
+    const allowed = new Set([
+      ...args.tools.map((t) => qualify(t.name)),
+      ...builtIns,
+    ]);
 
     const session = query({
       prompt: args.prompt,
@@ -81,12 +96,16 @@ export const claudeCodeLocalProvider: LLMProvider = {
         model: config.LLM_MODEL,
         cwd: process.cwd(),
 
-        // Solo nuestras herramientas: nada de Bash, Read ni WebSearch. Y nada
-        // del entorno de quien lanza el worker — ni ajustes, ni CLAUDE.md, ni
-        // skills, ni plugins. El auditor tiene que comportarse igual en
-        // cualquier máquina, y de paso el prefijo del harness baja de ~120.000
-        // tokens a unos cientos.
-        tools: [],
+        // Nuestras herramientas más, como mucho, `WebSearch`. Nada de Bash ni
+        // Read, y nada del entorno de quien lanza el worker — ni ajustes, ni
+        // CLAUDE.md, ni skills, ni plugins: el auditor tiene que comportarse
+        // igual en cualquier máquina.
+        //
+        // Esa poda es también lo que mantiene el prefijo del harness en unos
+        // cientos de tokens en vez de ~120.000. Encender una integrada añade su
+        // definición, no las veinte, pero el efecto se mide: ver `tokens_in`
+        // del paso `audit.run` en la Traza antes y después.
+        tools: [...builtIns],
         mcpServers: { [SERVER_NAME]: server },
         allowedTools: [...allowed],
         settingSources: [],

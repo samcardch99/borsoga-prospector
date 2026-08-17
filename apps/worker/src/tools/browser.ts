@@ -17,6 +17,9 @@ import { clip, observe } from "./observation";
 
 const DESKTOP = { width: 1440, height: 900 };
 
+/** Margen para que la página se asiente una vez ya existe. Ver `gotoRendered`. */
+const SETTLE_MS = 3_000;
+
 let browserPromise: Promise<Browser> | null = null;
 
 async function getBrowser(): Promise<Browser> {
@@ -60,6 +63,35 @@ async function withPage<T>(
   }
 }
 
+/**
+ * Abrir una página y dejarla asentada, sin apostar la navegación entera a que
+ * la red se calle.
+ *
+ * Antes esto era un `goto` con `waitUntil: "networkidle"`, y fallaba más de lo
+ * que funcionaba: `networkidle` exige medio segundo sin una sola petición, y
+ * una web de estudio con analítica, chat, vídeo y tipografías externas no lo
+ * consigue nunca. El resultado era `RENDER_FAILED` a los 20 000 ms clavados en
+ * cuatro de cada seis intentos — y cada uno es una página que el auditor no
+ * llegó a ver, así que el informe salía más pobre por un detalle de espera.
+ *
+ * Ahora la navegación termina en `domcontentloaded`, que es lo que de verdad
+ * decide si la página existe, y el asentamiento va aparte con su propio plazo
+ * corto. Si la red no se calla, se sigue igual: se prefiere una página
+ * renderizada de más con algún widget a medio cargar que ninguna página.
+ */
+async function gotoRendered(page: Page, url: string) {
+  const response = await page.goto(url, {
+    waitUntil: "domcontentloaded",
+    timeout: config.CRAWL_TIMEOUT_MS,
+  });
+
+  await page.waitForLoadState("networkidle", { timeout: SETTLE_MS }).catch(() => {
+    /* La red no se calló a tiempo. Es lo normal y no invalida lo que se ve. */
+  });
+
+  return response;
+}
+
 // ─── render_dom ──────────────────────────────────────────────────────────────
 
 const renderInput = {
@@ -78,7 +110,7 @@ type RenderInput = { url: string; width?: number };
 export const renderDomTool: AgentTool<RenderInput> = {
   name: "render_dom",
   description:
-    "Abre la URL en un Chromium real, espera a que la red se calme y devuelve el DOM ya renderizado: " +
+    "Abre la URL en un Chromium real, deja que se asiente unos segundos y devuelve el DOM ya renderizado: " +
     "texto visible, número de imágenes sin alt, enlaces, errores de consola y peticiones fallidas. " +
     "Es lo que ve una persona. Compáralo con fetch_served_html para detectar contenido que solo existe tras ejecutar JS.",
   inputSchema: renderInput,
@@ -103,10 +135,7 @@ export const renderDomTool: AgentTool<RenderInput> = {
           failedRequests.push(`${r.method()} ${r.url()} — ${r.failure()?.errorText ?? "?"}`);
         });
 
-        const response = await page.goto(url, {
-          waitUntil: "networkidle",
-          timeout: config.CRAWL_TIMEOUT_MS,
-        });
+        const response = await gotoRendered(page, url);
 
         const facts = await page.evaluate(() => {
           const imgs = Array.from(document.images);
@@ -209,7 +238,7 @@ export const screenshotTool: AgentTool<ShotInput> = {
         width,
         DESKTOP.height,
         async (page) => {
-          await page.goto(url, { waitUntil: "networkidle", timeout: config.CRAWL_TIMEOUT_MS });
+          await gotoRendered(page, url);
           const buffer = await page.screenshot({ fullPage, type: "png" });
           const pageHeight = fullPage
             ? await page.evaluate(() => document.documentElement.scrollHeight)

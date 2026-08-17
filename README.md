@@ -103,7 +103,48 @@ pnpm --filter @borsoga/worker enqueue zone "Doral" miami_dade 25.809 -80.355 800
 
 # Auditar un solo negocio, sin gastar cuota de Places
 pnpm --filter @borsoga/worker enqueue prospect "Nombre" https://ejemplo.com Miami
+
+# Qué hay en la cola y en qué estado
+pnpm --filter @borsoga/worker enqueue status
+
+# Qué devolvió cada llamada a herramienta, la última primero
+pnpm --filter @borsoga/worker enqueue steps
 ```
+
+`status` y `steps` son para cuando lo que falla es la propia interfaz: enseñan
+lo mismo que la Traza, pero sin depender de que la web arranque.
+
+Los prospectos de prueba se reparten por el mapa a partir de su nombre. No es
+cosmético: creados todos en el mismo punto, dos auditorías a la vez apilaban su
+marcador y la ventana en vivo parecía no moverse al cambiar de una a otra.
+
+---
+
+## La ventana de auditoría en vivo
+
+Sobre el mapa, mientras el worker trabaja, hay una ventana que enseña **qué está
+mirando el auditor ahora mismo**: la URL en la que está, sus últimos pasos con el
+resultado de cada uno, y una miniatura de la página. Una línea de hormigas la une
+con el negocio, que queda marcado con una mira y su nombre.
+
+Con `WORKER_CONCURRENCY=2` hay dos auditorías a la vez y **la ventana sigue a la
+que tú elijas**: el conmutador de la cabecera cambia de una a otra y el mapa vuela
+hasta el negocio elegido. La otra no se pausa — sigue trabajando y su rastro entra
+en la Traza igual.
+
+Tres detalles que no son evidentes leyendo el código:
+
+- La ventana **no es de la zona que se está mirando**. Sale de `jobs`, no de
+  `scans`, así que enseña lo que esté corriendo aunque el prospecto viva en otra
+  zona. Por eso las tres columnas del mapa se pintan siempre, incluso con la zona
+  vacía: un mensaje a pantalla completa se llevaba la ventana por delante.
+- La miniatura sale del **paso de traza**, no de `evidence`. La evidencia no se
+  escribe hasta que el agente entrega el informe, y para entonces la auditoría ya
+  no está viva. El worker anota la clave de la captura en el `output` del paso, en
+  el mismo momento en que guarda la imagen.
+- La línea se proyecta con `map.project()` y se recoloca en cada `onMove`. En SVG
+  los porcentajes solo valen en `line` y `circle`, así que hay que dar
+  coordenadas de pantalla de verdad.
 
 ---
 
@@ -129,7 +170,19 @@ el `.env`, así que `scan.zone` falló sus cinco intentos y quedó en `failed` �
 retroceso exponencial funcionó—. Todo lo demás del flujo se ejercitó con un
 prospecto creado a mano, que es para lo que existe `enqueue prospect`.
 
-### Dos cosas que aprendimos ejecutándolo
+### Tres cosas que aprendimos ejecutándolo
+
+**`networkidle` no es una espera, es una apuesta.** `render_dom` y `screenshot`
+navegaban con `waitUntil: "networkidle"`, que exige medio segundo sin una sola
+petición de red. Una web de estudio con analítica, chat y tipografías externas
+no lo consigue casi nunca: de seis intentos seguidos, cuatro murieron con
+`RENDER_FAILED` a los 20 000 ms clavados, y cada uno es una página que el
+auditor no llegó a ver. Ahora la navegación termina en `domcontentloaded` y el
+asentamiento va aparte, con tres segundos que pueden expirar sin romper nada.
+El mismo sitio que fallaba a los 20 s ahora se resuelve en 5,3 s. No lo arregla
+todo —zahahadid.com sigue agotando el plazo, y eso ya es del sitio—, pero deja
+de perderse por un detalle de espera lo que sí se podía mirar.
+
 
 **El tope de coste se queda corto con las herramientas nuevas.** Una auditoría
 reventó el límite de $2,50 llegando a $3,11 antes de entregar informe: `crawl_site`
@@ -308,6 +361,13 @@ que el agente no las ve y no puede prometer evidencia que nadie recogió.
 
 - `search_web` y `fetch_external_profile` **necesitan credenciales** de un
   buscador. Sin ellas no hay forma de mirar prensa, directorios ni perfiles.
+  Como paliativo, `LLM_WEB_SEARCH` enciende la `WebSearch` integrada del Agent
+  SDK, que va contra la suscripción y no contra una API de terceros. Cubre
+  *encontrar*, no *citar*: una búsqueda no pasa por `observe()`, así que no
+  produce `Observation` y no puede sostener un hallazgo. Sirve para dar con la
+  URL; leerla sigue siendo trabajo de `fetch_served_html` o `render_dom`.
+  Tampoco aparece en la Traza, porque las integradas no pasan por
+  `recordToolCall` — un agujero de observabilidad que sigue abierto.
 - `image_fingerprint` sirve para detectar banco de imágenes, y eso exige poder
   comparar contra algo de fuera. Sin `search_web` solo podría encontrar
   duplicados dentro del propio sitio, que es un hallazgo mucho más flojo.
@@ -341,13 +401,15 @@ worker en marcha.
 
 ### Qué falta del paso 4
 
-Las **dos ventanas flotantes en vivo** del handoff §6.1 —"Auditoría web en
-vivo" y "Personas y menciones", ancladas al marcador con la línea de hormigas—
-no están. No es una decisión estética: las tablas `people` y `mentions` no
-tienen todavía quien las escriba. Ninguna de las seis herramientas del worker
-recoge directivos ni menciones, y las que lo harían —`search_web` y
-`fetch_external_profile`— son las dos que necesitan credenciales de un buscador.
-Construir el panel ahora sería pintar un marco vacío.
+De las **dos ventanas flotantes en vivo** del handoff §6.1 está la primera:
+"Auditoría web en vivo", anclada al marcador con la línea de hormigas y con
+conmutador entre las auditorías concurrentes.
+
+Falta la segunda, **"Personas y menciones"**, y no por estética: las tablas
+`people` y `mentions` no tienen todavía quien las escriba. Ninguna de las seis
+herramientas del worker recoge directivos ni menciones, y las que lo harían
+—`search_web` y `fetch_external_profile`— siguen sin construirse. Pintar ese
+panel ahora sería pintar un marco vacío.
 
 El **control de zoom** solo aparece con el mapa real, que trae el suyo. En el
 lienzo de reserva no hay nada que ampliar, así que ese hueco lo ocupa el aviso
@@ -440,14 +502,25 @@ estar: los campos de centro y radio se escriben a mano.
 Se intentó y se retiró. El componente montaba —lienzo, marcadores del centro y
 del borde bien colocados, arrastre cableado— pero el mapa nunca terminaba de
 cargar el estilo: ni `load`, ni `error`, ni nada en consola, con el mismo style
-JSON que el mapa grande sí carga en la misma sesión. Se descartó que fuera el
-encuadre, el bundle obsoleto de HMR y el agotamiento de contextos WebGL (falla
-igual en pestaña nueva).
+JSON que el mapa grande sí carga en la misma sesión.
 
-Sin fondo de mapa el componente no sirve para nada —arrastrar un punto sobre un
-recuadro vacío no dice dónde estás— así que se quitó en vez de dejar un hueco en
-blanco. Lo que sí se quedó es `apps/web/src/lib/geo.ts`, donde vive ahora la
-geometría del área que antes estaba embebida en el mapa grande.
+**El diagnóstico era falso.** Se encontró después, al construir la ventana de
+auditoría en vivo: la pestaña se estaba mirando desde fuera, sin primer plano, y
+con `document.visibilityState === "hidden"` el navegador no ejecuta
+`requestAnimationFrame`. MapLibre pinta cada fotograma con rAF, así que sin
+primer plano no dibuja nada, no dispara `load` y ni siquiera `triggerRepaint()`
+produce un `render`. El lienzo se queda blanco y no hay error en ninguna parte,
+porque no hay error.
+
+Cómo reconocerlo: el mapa responde a todo lo que no sea pintar. `map.loaded()`
+es `true`, `map.isStyleLoaded()` es `true` y `map.queryRenderedFeatures()`
+devuelve cientos de elementos, pero la pantalla está en blanco. Si eso pasa,
+mira `document.visibilityState` antes de tocar el código. Vale para cualquiera
+que revise esta aplicación con un navegador automatizado.
+
+Así que el mini mapa probablemente nunca estuvo roto y puede volver. Lo que sí
+se quedó es `apps/web/src/lib/geo.ts`, donde vive ahora la geometría del área
+que antes estaba embebida en el mapa grande.
 
 Los **filtros de responsable y periodo** del pipeline tampoco están, porque no
 hay usuarios a quien asignar nada.

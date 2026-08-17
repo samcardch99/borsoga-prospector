@@ -60,6 +60,14 @@ export async function recordToolCall(args: {
           layer: o.layer,
           method: o.method,
           quote: clip(o.quote, 600),
+          /*
+           * La clave de la captura se anota aquí y no solo en la evidencia
+           * porque la evidencia se escribe al final del run, cuando el agente
+           * ya ha entregado el informe. La ventana en vivo necesita la imagen
+           * mientras el agente sigue trabajando, y este es el único sitio que
+           * se escribe en el momento en que la captura existe.
+           */
+          screenshot: o.screenshot?.storageKey ?? null,
         })),
       }
     : { errorCode: call.errorCode };

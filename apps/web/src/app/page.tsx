@@ -16,12 +16,14 @@ import {
   getNavCounts,
   getQuota,
   getZone,
+  listLiveRuns,
   listProspects,
 } from "@/lib/queries";
 import { timeAgo } from "@/lib/display";
 import { AppHeader } from "@/components/shell/app-header";
 import { TabBar } from "@/components/shell/tab-bar";
 import { MapCanvas } from "@/components/map/map-canvas";
+import { LiveRefresh } from "@/components/traza/live-refresh";
 import { DossierSummary } from "@/components/map/dossier-summary";
 import { ProspectList, applyFilters, type ListFilter } from "@/components/map/prospect-list";
 
@@ -51,7 +53,12 @@ export default async function MapaPage({ searchParams }: PageProps<"/">) {
   const filters = parseFilters(first(sp.f));
   const requestedId = first(sp.p) ?? null;
 
-  const [zone, quota, navCounts] = await Promise.all([getZone(), getQuota(), getNavCounts()]);
+  const [zone, quota, navCounts, liveRuns] = await Promise.all([
+    getZone(),
+    getQuota(),
+    getNavCounts(),
+    listLiveRuns(),
+  ]);
 
   const [rows, scan] = zone
     ? await Promise.all([listProspects(zone.id), getLatestScan(zone.id)])
@@ -73,6 +80,12 @@ export default async function MapaPage({ searchParams }: PageProps<"/">) {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
+      {/*
+       * Mientras haya una auditoría corriendo, la página se refresca sola: es
+       * lo que hace que la ventana en vivo esté viva de verdad. Cuando no hay
+       * ninguna, no se sondea — la pantalla no cambia sola por gusto.
+       */}
+      <LiveRefresh active={liveRuns.length > 0} />
       <AppHeader zone={zone} quota={quota} />
       <TabBar
         counts={navCounts}
@@ -81,49 +94,31 @@ export default async function MapaPage({ searchParams }: PageProps<"/">) {
         propuestaHref={selectedId ? `/propuestas/${selectedId}` : null}
       />
 
+      {/*
+       * Las tres columnas se pintan siempre, también con la zona vacía. Antes
+       * un mensaje a pantalla completa sustituía el mapa, y con él se llevaba
+       * por delante la ventana de auditoría en vivo — que no es de esta zona,
+       * sino de lo que esté corriendo, mire uno donde mire. El vacío se cuenta
+       * en la lista, que es donde falta algo.
+       */}
       <main className="flex min-h-0 flex-1">
-        {zone && rows.length === 0 ? (
-          <EmptyZone zoneName={zone.name} />
-        ) : (
-          <>
-            <ProspectList
-              rows={rows}
-              visible={visible}
-              filters={filters}
-              selectedId={selectedId}
-              exportHref={`/api/prospects?${exportParams.toString()}`}
-            />
-            <MapCanvas rows={visible} selectedId={selectedId} zone={zone} scan={scan} />
-            <DossierSummary dossier={dossier} />
-          </>
-        )}
+        <ProspectList
+          rows={rows}
+          visible={visible}
+          filters={filters}
+          selectedId={selectedId}
+          exportHref={`/api/prospects?${exportParams.toString()}`}
+          zoneName={zone?.name ?? null}
+        />
+        <MapCanvas
+          rows={visible}
+          selectedId={selectedId}
+          zone={zone}
+          scan={scan}
+          liveRuns={liveRuns}
+        />
+        <DossierSummary dossier={dossier} />
       </main>
-    </div>
-  );
-}
-
-/**
- * Vacío de verdad: la zona existe pero no tiene prospectos. No es "no hay
- * resultados" (handoff §7) — dice qué hacer a continuación. El desglose por
- * motivo de descarte llega cuando haya escaneos que descarten algo.
- */
-function EmptyZone({ zoneName }: { zoneName: string }) {
-  return (
-    <div className="grid flex-1 place-items-center px-6">
-      <div className="max-w-[520px] text-center">
-        <h2 className="text-3xl font-medium">Todavía no hay prospectos en {zoneName}</h2>
-        <p className="mt-2 text-base2" style={{ color: "var(--muted)" }}>
-          La zona está configurada pero nadie ha escaneado aún, o el escaneo no
-          encontró negocios dentro del criterio. El worker escribe aquí en cuanto
-          termina el primer trabajo.
-        </p>
-        <pre
-          className="mt-4 overflow-x-auto rounded-lg border border-line2 px-3 py-2.5 text-left font-mono text-xs2"
-          style={{ background: "var(--inset)", color: "var(--text2)" }}
-        >
-          pnpm --filter @borsoga/worker enqueue zone …
-        </pre>
-      </div>
     </div>
   );
 }

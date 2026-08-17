@@ -27,7 +27,8 @@ import {
 } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { BRANCH_META, type Branch } from "@borsoga/shared";
-import type { ProspectRow, ScanSummary, ZoneSummary } from "@/lib/queries";
+import type { LiveRun, ProspectRow, ScanSummary, ZoneSummary } from "@/lib/queries";
+import { AntsLine, LiveAuditPanel } from "./live-audit";
 import { branchColor, money, moneyExact, scoreColor, scoreSurface } from "@/lib/display";
 import { areaPolygon, metersPerDegreeLng, zoomForRadius } from "@/lib/geo";
 import { applyMapPalette, buildMapStyle } from "@/lib/map-style";
@@ -218,14 +219,18 @@ export function MapCanvas({
   selectedId,
   zone,
   scan,
+  liveRuns = [],
 }: {
   rows: ProspectRow[];
   selectedId: string | null;
   zone: ZoneSummary | null;
   scan: ScanSummary | null;
+  liveRuns?: LiveRun[];
 }) {
   const [mode, setMode] = useState<ColorMode>("score");
   const [tilesFailed, setTilesFailed] = useState(false);
+  const [watchedId, setWatchedId] = useState<string | null>(null);
+  const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const palette = useMapPalette();
@@ -243,6 +248,42 @@ export function MapCanvas({
     const map = mapRef.current?.getMap();
     if (map) applyMapPalette(map, palette);
   }, [palette]);
+
+  const watched = liveRuns.find((r) => r.prospectId === watchedId) ?? liveRuns[0] ?? null;
+
+  /*
+   * La línea de hormigas necesita coordenadas de pantalla, no porcentajes: el
+   * handoff avisa de que en SVG los porcentajes solo valen en `line` y
+   * `circle`. Se proyecta con el propio mapa y se recalcula al mover o hacer
+   * zoom, que es cuando deja de ser válida.
+   */
+  const updateAnchor = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || !watched) return setAnchor(null);
+    const p = map.project([watched.lng, watched.lat]);
+    setAnchor({ x: p.x, y: p.y });
+  }, [watched]);
+
+  useEffect(() => {
+    updateAnchor();
+  }, [updateAnchor]);
+
+  /*
+   * Elegir a quién mirar lleva el mapa hasta él. Sin esto la ventana puede estar
+   * siguiendo una auditoría que cae fuera del encuadre —o de la zona mostrada,
+   * que es lo normal— y la línea de hormigas apunta a un borde de pantalla.
+   *
+   * El `ref` es lo que impide que el vuelo se repita: la página se refresca sola
+   * cada pocos segundos mientras hay algo corriendo, y sin él cada refresco
+   * volvería a centrar el mapa y no se podría ni mover.
+   */
+  const flownTo = useRef<string | null>(null);
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || !watched || flownTo.current === watched.prospectId) return;
+    flownTo.current = watched.prospectId;
+    map.flyTo({ center: [watched.lng, watched.lat], zoom: Math.max(map.getZoom(), 13), speed: 1.2 });
+  }, [watched]);
 
   const select = useCallback(
     (id: string) => {
@@ -327,7 +368,11 @@ export function MapCanvas({
         // El estilo se construyó con la paleta del primer render, que en la
         // hidratación puede ser todavía la del servidor. Repintar al cargar deja
         // el mapa en el tema correcto sin esperar a un cambio.
-        onLoad={(e) => applyMapPalette(e.target, palette)}
+        onLoad={(e) => {
+          applyMapPalette(e.target, palette);
+          updateAnchor();
+        }}
+        onMove={updateAnchor}
         onError={() => setTilesFailed(true)}
         style={{ width: "100%", height: "100%" }}
       >
@@ -366,6 +411,17 @@ export function MapCanvas({
           </Marker>
         ))}
       </MapLibreMap>
+
+      {/*
+       * La línea va antes que el panel para que quede por debajo, y arranca del
+       * borde derecho de la ventana. Ese punto es fijo a propósito: la ventana
+       * está anclada arriba a la izquierda y no se mueve con el mapa.
+       */}
+      {watched && anchor && (
+        <AntsLine from={{ x: 383, y: 112 }} to={anchor} label={watched.prospectName} />
+      )}
+
+      <LiveAuditPanel runs={liveRuns} watchedId={watched?.prospectId ?? null} onWatch={setWatchedId} />
 
       {controls}
     </div>

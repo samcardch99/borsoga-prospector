@@ -163,6 +163,7 @@ export function ProspectList({
   filters,
   selectedId,
   exportHref,
+  zoneName,
 }: {
   /** Todos los de la zona: los chips necesitan su recuento aunque estén ocultos. */
   rows: ProspectRow[];
@@ -170,6 +171,7 @@ export function ProspectList({
   filters: Set<ListFilter>;
   selectedId: string | null;
   exportHref: string;
+  zoneName?: string | null;
 }) {
   const counts = {
     icp: rows.filter((r) => !r.disqualified && r.icpFit !== "low").length,
@@ -211,9 +213,26 @@ export function ProspectList({
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {visible.length === 0 ? (
-          <p className="px-3 py-6 text-sm2" style={{ color: "var(--muted)" }}>
-            Ningún prospecto encaja con estos filtros.
-          </p>
+          /*
+           * Dos vacíos distintos y no dan la misma información: "los filtros no
+           * dejan pasar nada" se arregla tocando los chips; "esta zona no se ha
+           * escaneado" se arregla escaneando.
+           */
+          rows.length === 0 ? (
+            <div className="px-3 py-6">
+              <p className="text-sm2" style={{ color: "var(--muted)" }}>
+                {zoneName ? `Nadie ha escaneado ${zoneName} todavía.` : "No hay ninguna zona configurada."}
+              </p>
+              <p className="mt-1.5 text-2xs" style={{ color: "var(--dim2)" }}>
+                Lánzalo desde la vista de Zonas. El worker escribe aquí en cuanto termina el
+                primer prospecto.
+              </p>
+            </div>
+          ) : (
+            <p className="px-3 py-6 text-sm2" style={{ color: "var(--muted)" }}>
+              Ningún prospecto encaja con estos filtros.
+            </p>
+          )
         ) : (
           visible.map((row) => (
             <ProspectRowItem

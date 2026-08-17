@@ -16,6 +16,7 @@ import {
   db,
   evidence as evidenceTable,
   findings as findingsTable,
+  jobs,
   proposals as proposalsTable,
   prospects as prospectsTable,
   quotaUsage,
@@ -31,6 +32,7 @@ import type {
   Severity,
   Verdict,
 } from "@borsoga/shared";
+import { screenshotKeyOf } from "./trace-output";
 
 // ─── Formas que consume la interfaz ──────────────────────────────────────────
 
@@ -488,6 +490,107 @@ export const getReviewedToday = cache(async (): Promise<number> => {
     .where(sql`${findingsTable.reviewedAt} >= date_trunc('day', now())`);
 
   return rows[0]?.n ?? 0;
+});
+
+// ─── Auditoría en vivo ───────────────────────────────────────────────────────
+
+export interface LiveStep {
+  id: string;
+  step: string;
+  target: string;
+  status: TraceStatus;
+  startedAt: Date;
+  durationMs: number;
+}
+
+/** Una auditoría en curso, con lo necesario para pintar su ventana en vivo. */
+export interface LiveRun {
+  prospectId: string;
+  prospectName: string;
+  lat: number;
+  lng: number;
+  startedAt: Date;
+  steps: LiveStep[];
+  /** Última captura que dejó el agente, si dejó alguna. */
+  screenshotKey: string | null;
+  /** Lo último que miró: alimenta la línea de URL del panel. */
+  currentTarget: string | null;
+}
+
+/**
+ * Las auditorías que están corriendo ahora mismo.
+ *
+ * Sale de `jobs`, no de `scans`: el escaneo puede estar en marcha con todos sus
+ * prospectos esperando en cola, y lo que la ventana en vivo quiere enseñar es
+ * dónde hay alguien trabajando de verdad. Con `WORKER_CONCURRENCY=2` son dos
+ * como mucho, y el usuario elige cuál mira.
+ */
+export const listLiveRuns = cache(async (): Promise<LiveRun[]> => {
+  const running = await db
+    .select({
+      prospectId: prospectsTable.id,
+      prospectName: prospectsTable.name,
+      lat: prospectsTable.lat,
+      lng: prospectsTable.lng,
+      startedAt: jobs.lockedAt,
+    })
+    .from(jobs)
+    .innerJoin(prospectsTable, eq(jobs.prospectId, prospectsTable.id))
+    .where(and(eq(jobs.kind, "audit.prospect"), eq(jobs.status, "running")))
+    .orderBy(jobs.lockedAt);
+
+  if (running.length === 0) return [];
+
+  const ids = running.map((r) => r.prospectId);
+
+  /* Los pasos de todos los runs en una consulta, no una por run: son dos
+     ventanas como mucho, pero el patrón aguanta si sube la concurrencia. */
+  const steps = await db
+    .select({
+      id: traceSteps.id,
+      prospectId: traceSteps.prospectId,
+      step: traceSteps.step,
+      target: traceSteps.target,
+      status: traceSteps.status,
+      startedAt: traceSteps.startedAt,
+      durationMs: traceSteps.durationMs,
+      output: traceSteps.output,
+    })
+    .from(traceSteps)
+    .where(inArray(traceSteps.prospectId, ids))
+    .orderBy(desc(traceSteps.startedAt))
+    .limit(60);
+
+  /*
+   * La captura sale del paso de traza, no de `evidence`: la evidencia no
+   * existe hasta que el agente entrega el informe, y para entonces el run ya
+   * no está corriendo y esta consulta no lo devuelve. El worker anota la clave
+   * en el `output` del paso justo cuando guarda la imagen.
+   */
+  return running.map((r) => {
+    const rows = steps.filter((s) => s.prospectId === r.prospectId);
+    const mine = rows.map((s) => ({
+      id: s.id,
+      step: s.step,
+      target: s.target,
+      status: s.status,
+      startedAt: s.startedAt,
+      durationMs: s.durationMs,
+    }));
+
+    return {
+      prospectId: r.prospectId,
+      prospectName: r.prospectName,
+      lat: r.lat,
+      lng: r.lng,
+      startedAt: r.startedAt ?? new Date(),
+      steps: mine,
+      // `rows` viene en orden descendente, así que la primera con imagen es la
+      // última que se tomó: la ventana enseña lo que el agente mira ahora.
+      screenshotKey: rows.map((s) => screenshotKeyOf(s.output)).find(Boolean) ?? null,
+      currentTarget: mine[0]?.target ?? null,
+    };
+  });
 });
 
 // ─── Traza ───────────────────────────────────────────────────────────────────

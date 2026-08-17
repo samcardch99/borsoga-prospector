@@ -25,6 +25,16 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().default(""),
   LLM_MODEL: z.string().default("claude-opus-5"),
   LLM_MAX_TURNS: int.default(40),
+
+  /**
+   * Deja que el auditor use la búsqueda web integrada del Agent SDK.
+   *
+   * Va contra la suscripción, no contra una API de terceros, así que no cuesta
+   * dinero — pero sí engorda el prefijo del harness con la definición de la
+   * herramienta. Es una bandera para poder medir la diferencia y decidir con
+   * datos, no de memoria.
+   */
+  LLM_WEB_SEARCH: bool.default(true),
   LLM_MAX_COST_USD_PER_PROSPECT: num.default(2.5),
 
   WORKER_CONCURRENCY: int.default(2),
