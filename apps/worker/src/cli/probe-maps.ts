@@ -14,7 +14,7 @@ import { searchMaps } from "../tools/maps";
 const [, , query, lat, lng, radius, limit] = process.argv;
 
 try {
-  const cards = await searchMaps({
+  const { cards, found } = await searchMaps({
     query: query ?? "custom kitchen cabinets",
     lat: Number(lat ?? 25.809),
     lng: Number(lng ?? -80.355),
@@ -22,7 +22,7 @@ try {
     detailLimit: Number(limit ?? 4),
   });
 
-  console.log(`${cards.length} negocios`);
+  console.log(`${found} dentro del radio · ${cards.length} con ficha abierta`);
   for (const c of cards) {
     console.log(
       `- ${c.name} | ${c.category ?? "-"} | ${c.address ?? "-"} | ` +

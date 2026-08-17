@@ -164,7 +164,13 @@ export interface SearchMapsArgs {
   detailLimit: number;
 }
 
-export async function searchMaps(args: SearchMapsArgs): Promise<MapsCard[]> {
+export interface SearchMapsResult {
+  cards: MapsCard[];
+  /** Cuántos había dentro del radio antes de aplicar `detailLimit`. */
+  found: number;
+}
+
+export async function searchMaps(args: SearchMapsArgs): Promise<SearchMapsResult> {
   return withPage(
     VIEWPORT.width,
     VIEWPORT.height,
@@ -211,6 +217,7 @@ export async function searchMaps(args: SearchMapsArgs): Promise<MapsCard[]> {
         cards.push(card);
       }
 
+      const found = cards.length;
       const wanted = cards.slice(0, args.detailLimit);
       for (const card of wanted) {
         const item = raw.find((r) => r.href.includes(card.ftid));
@@ -223,7 +230,7 @@ export async function searchMaps(args: SearchMapsArgs): Promise<MapsCard[]> {
         }
       }
 
-      return wanted;
+      return { cards: wanted, found };
     },
     { userAgent: config.MAPS_USER_AGENT, locale: "en-US" },
   );
@@ -252,7 +259,7 @@ const inputSchema = {
     .max(40)
     .optional()
     .describe(
-      "Cuántas fichas abrir para sacar la web. Cada una es una navegación de varios segundos; 15 por defecto.",
+      "Cuántas fichas abrir para sacar la web. Cada una es una navegación de varios segundos y es con diferencia lo más caro de esta herramienta, así que empieza barriendo con el valor por defecto (6) y súbelo solo para un término que ya hayas visto que rinde.",
     ),
 };
 
@@ -289,15 +296,15 @@ export const searchMapsTool: AgentTool<Input> = {
   inputSchema,
 
   async run(input, ctx): Promise<ToolResult> {
-    const detailLimit = input.detailLimit ?? 15;
+    const detailLimit = input.detailLimit ?? 6;
 
     // Un solo hueco de rate limit para todo el barrido: dentro va una
     // navegación por ficha y no conviene encadenarlas sin freno.
     await ctx.rateLimit("www.google.com");
 
-    let cards: MapsCard[];
+    let result: SearchMapsResult;
     try {
-      cards = await searchMaps({
+      result = await searchMaps({
         query: input.query,
         lat: input.lat,
         lng: input.lng,
@@ -310,6 +317,8 @@ export const searchMapsTool: AgentTool<Input> = {
       }
       return { ok: false, errorCode: "MAPS_FAILED", message: errorMessage(err) };
     }
+
+    const { cards, found } = result;
 
     if (cards.length === 0) {
       return {
@@ -330,7 +339,10 @@ export const searchMapsTool: AgentTool<Input> = {
           url: searchUrl(input.query, input.lat, input.lng, input.radiusMeters),
           quote: [
             `Búsqueda en Google Maps: "${input.query}" · radio ${input.radiusMeters} m`,
-            `${cards.length} negocios, ${conWeb} con web declarada`,
+            `${found} negocios dentro del radio; se abrió la ficha de ${cards.length}, ${conWeb} con web`,
+            found > cards.length
+              ? `Quedan ${found - cards.length} sin abrir. Si este término rinde, repítelo con detailLimit más alto.`
+              : "Se abrieron todos los que había.",
             "",
             "nombre | categoría | dirección | valoración | web | teléfono | id",
             ...cards.map(line),
