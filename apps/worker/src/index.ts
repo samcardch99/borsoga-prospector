@@ -24,7 +24,7 @@ let inFlight = 0;
 async function dispatch(job: ClaimedJob): Promise<void> {
   switch (job.kind) {
     case "scan.zone":
-      return scanZone(job.payload as ScanZonePayload);
+      return scanZone(job.payload as ScanZonePayload, shutdown.signal);
     case "audit.prospect":
       return auditProspect(job.payload as AuditProspectPayload, shutdown.signal);
     case "finding.recheck":

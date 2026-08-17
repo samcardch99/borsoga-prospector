@@ -144,6 +144,59 @@ export const auditorOutputJsonSchema = (() => {
   return schema as Record<string, unknown>;
 })();
 
+// ─── Descubrimiento de una zona ──────────────────────────────────────────────
+
+/**
+ * Un negocio encontrado por el prospector, antes de auditarlo.
+ *
+ * Es deliberadamente pobre. Aquí no se decide si el negocio vale: eso es el
+ * trabajo del auditor, que abrirá su web y mirará. Lo único que se pide es que
+ * exista, que esté dentro del área y que se pueda volver a él —de ahí que
+ * `sourceId` sea obligatorio y `website` no—. Un negocio sin web sigue siendo
+ * un negocio, y muchas veces es justo el que más falta le hace un estudio.
+ */
+export const discoveredBusinessSchema = z.object({
+  /** Identificador estable de la fuente. De Maps, el `0x…:0x…` del enlace. */
+  sourceId: z.string().min(1),
+  name: z.string().min(1),
+  address: z.string().min(1),
+  city: z.string().min(1),
+  county: countySchema,
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+  website: z.string().nullable(),
+  phone: z.string().nullable(),
+  /** Qué sectores parece tocar. Pista para el auditor, no veredicto. */
+  sectors: z.array(sectorSchema),
+  rating: z.number().min(0).max(5).nullable(),
+  reviewCount: z.number().int().nonnegative().nullable(),
+});
+
+/**
+ * La salida de un `scan.zone`.
+ *
+ * `queries` no es decorativo: es lo que permite entender por qué una zona
+ * devolvió lo que devolvió, y repetir o corregir la búsqueda. Sin eso, un
+ * escaneo pobre es indistinguible de una zona pobre.
+ */
+export const prospectorOutputSchema = z.object({
+  businesses: z.array(discoveredBusinessSchema),
+  /** Los términos que se llegaron a buscar, en el orden en que se buscaron. */
+  queries: z.array(z.string().min(1)),
+  /** Qué se descartó y por qué: cadenas grandes, fuera de área, duplicados. */
+  notes: z.string().min(1),
+});
+
+export type ProspectorOutputParsed = z.infer<typeof prospectorOutputSchema>;
+export type DiscoveredBusiness = z.infer<typeof discoveredBusinessSchema>;
+
+export const prospectorOutputJsonSchema = (() => {
+  const { $schema: _ignored, ...schema } = z.toJSONSchema(prospectorOutputSchema, {
+    target: "draft-2020-12",
+  });
+  return schema as Record<string, unknown>;
+})();
+
 // ─── Reverificación de un hallazgo ───────────────────────────────────────────
 
 /**

@@ -35,7 +35,20 @@ const envSchema = z.object({
    * datos, no de memoria.
    */
   LLM_WEB_SEARCH: bool.default(true),
-  LLM_MAX_COST_USD_PER_PROSPECT: num.default(2.5),
+  /*
+   * El tope por auditoría. A 2,5 se perdían informes enteros: el agente gastaba
+   * el presupuesto y se quedaba sin entregar, y en una tanda de 25 prospectos
+   * eso son varios perdidos. `crawl_site` y `lighthouse` devuelven mucho más
+   * texto que las herramientas con las que se fijó esta cifra.
+   */
+  LLM_MAX_COST_USD_PER_PROSPECT: num.default(4),
+
+  /**
+   * El tope para buscar una zona entera. Es más alto que el de una auditoría
+   * porque una búsqueda son varias llamadas a Maps y cada una devuelve una
+   * lista larga, pero se gasta una vez por escaneo y no una por negocio.
+   */
+  LLM_MAX_COST_USD_PER_ZONE: num.default(6),
 
   WORKER_CONCURRENCY: int.default(2),
   WORKER_ID: z.string().default(`worker-${process.pid}`),
