@@ -198,6 +198,14 @@ export async function scanZone(payload: ScanZonePayload, signal: AbortSignal): P
           address: business.address,
           website: business.website || null,
           phone: business.phone || null,
+          /*
+           * La posición también se refresca. La fuente de verdad es Maps, no lo
+           * que guardamos la primera vez, y sin esto un negocio mal situado se
+           * quedaba mal para siempre: volver a escanear corregía el nombre y la
+           * web pero dejaba el marcador donde estaba.
+           */
+          lat: business.lat,
+          lng: business.lng,
           // El sector lo afina el agente al auditar; aquí solo se suma la pista.
           sectors: sql`array(select distinct unnest(${prospects.sectors} || ${sectorsArray}))`,
         },
