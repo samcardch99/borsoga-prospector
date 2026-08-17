@@ -167,11 +167,13 @@ export async function scanZone(payload: ScanZonePayload, signal: AbortSignal): P
         address: business.address,
         lat: business.lat,
         lng: business.lng,
-        website: business.website,
-        phone: business.phone,
+        // El vacío del esquema se traduce aquí al null de la base. Ver la nota
+        // en `discoveredBusinessSchema` sobre por qué el esquema no usa null.
+        website: business.website || null,
+        phone: business.phone || null,
         ratings:
-          business.rating !== null
-            ? ([{ source: "google", score: business.rating, reviewCount: business.reviewCount ?? 0 }] as never)
+          business.rating > 0
+            ? ([{ source: "google", score: business.rating, reviewCount: business.reviewCount }] as never)
             : ([] as never),
         zoneId,
       })
@@ -180,8 +182,8 @@ export async function scanZone(payload: ScanZonePayload, signal: AbortSignal): P
         set: {
           name: business.name,
           address: business.address,
-          website: business.website,
-          phone: business.phone,
+          website: business.website || null,
+          phone: business.phone || null,
           // El sector lo afina el agente al auditar; aquí solo se suma la pista.
           sectors: sql`array(select distinct unnest(${prospects.sectors} || ${sectorsArray}))`,
         },

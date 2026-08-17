@@ -257,8 +257,12 @@ encontrado búsquedas distintas.
   que no está escrita es tirar clientes buenos a la basura.
 - \`sectors\`: qué parece tocar, a partir de la categoría de Maps y del nombre.
   Es una pista para el auditor, no un veredicto, y puede ir vacío.
-- \`website\` y \`phone\`: tal cual vengan, o \`null\`. No los inventes ni los
-  deduzcas del nombre.
+- \`website\` y \`phone\`: cópialos **tal cual** de la respuesta de la
+  herramienta, que los da etiquetados (\`web:\`, \`teléfono:\`). Si un negocio no
+  tiene, pon cadena vacía. No los inventes ni los deduzcas del nombre, y no los
+  dejes vacíos si la herramienta te los dio: la web es lo único que hace
+  auditable a un prospecto.
+- \`rating\` y \`reviewCount\`: 0 si no tiene valoraciones.
 - \`notes\`: qué dejaste fuera y por qué. Si descartaste cadenas grandes, o
   negocios fuera del área, o duplicados evidentes, dilo. Una zona que devuelve
   poco y una búsqueda que buscó poco se parecen mucho, y esta nota es lo único

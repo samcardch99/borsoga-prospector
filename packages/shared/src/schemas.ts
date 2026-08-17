@@ -151,9 +151,9 @@ export const auditorOutputJsonSchema = (() => {
  *
  * Es deliberadamente pobre. Aquí no se decide si el negocio vale: eso es el
  * trabajo del auditor, que abrirá su web y mirará. Lo único que se pide es que
- * exista, que esté dentro del área y que se pueda volver a él —de ahí que
- * `sourceId` sea obligatorio y `website` no—. Un negocio sin web sigue siendo
- * un negocio, y muchas veces es justo el que más falta le hace un estudio.
+ * exista, que esté dentro del área y que se pueda volver a él, de ahí que
+ * `sourceId` sea lo único imprescindible. Un negocio sin web sigue siendo un
+ * negocio, y muchas veces es justo el que más falta le hace un estudio.
  */
 export const discoveredBusinessSchema = z.object({
   /** Identificador estable de la fuente. De Maps, el `0x…:0x…` del enlace. */
@@ -164,12 +164,29 @@ export const discoveredBusinessSchema = z.object({
   county: countySchema,
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
-  website: z.string().nullable(),
-  phone: z.string().nullable(),
+  /*
+   * Cadena vacía y cero en vez de `null`, y no por gusto.
+   *
+   * Con `.nullable()` estos cuatro campos volvían **siempre** null: la web, el
+   * teléfono y la valoración de cinco negocios seguidos, mientras que el
+   * nombre, la dirección y las coordenadas —que no son nulables— llegaban
+   * perfectos. La herramienta las devolvía ("web: https://britobuilt.com/" en
+   * su observación, literal) y se perdían al construir la salida estructurada:
+   * un `anyOf: [tipo, null]` se colapsa al null.
+   *
+   * Cuesta un vacío que hay que traducir en el handler, y a cambio los datos
+   * llegan. Un negocio sin web es "" y se convierte en `null` al guardarlo.
+   */
+  /** URL, o cadena vacía si no tiene. Nunca null: ver arriba. */
+  website: z.string(),
+  /** Teléfono, o cadena vacía si no tiene. */
+  phone: z.string(),
   /** Qué sectores parece tocar. Pista para el auditor, no veredicto. */
   sectors: z.array(sectorSchema),
-  rating: z.number().min(0).max(5).nullable(),
-  reviewCount: z.number().int().nonnegative().nullable(),
+  /** Nota media, o 0 si el negocio no tiene valoraciones. */
+  rating: z.number().min(0).max(5),
+  /** Número de reseñas, 0 si no tiene. */
+  reviewCount: z.number().int().nonnegative(),
 });
 
 /**
