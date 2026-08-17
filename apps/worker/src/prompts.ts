@@ -249,11 +249,12 @@ Un negocio por entrada, sin repetir: \`sourceId\` es el identificador estable de
 Maps y dos entradas con el mismo id son el mismo negocio, aunque los haya
 encontrado búsquedas distintas.
 
-- \`county\`: dedúcelo de la ciudad de la dirección. Doral, Hialeah, Coral Gables,
-  Miami y Miami Beach son miami_dade. Fort Lauderdale, Hollywood, Pembroke Pines
-  y Weston son broward. Boca Raton, Delray Beach, Boynton Beach y West Palm
-  Beach son palm_beach. Si no puedes situarlo en ninguno de los tres, déjalo
-  fuera: no es del mercado.
+- \`county\` y \`city\`: **la zona ya los sabe**. Las direcciones de Maps suelen
+  venir sin ciudad —"11190 NW 25th St #120"— y quien filtra la geografía no es
+  el texto de la dirección sino el radio, que la herramienta ya aplicó antes de
+  devolverte nada. Así que usa el condado y la ciudad de la zona salvo que la
+  dirección diga claramente otra cosa. Descartar por no poder leer una ciudad
+  que no está escrita es tirar clientes buenos a la basura.
 - \`sectors\`: qué parece tocar, a partir de la categoría de Maps y del nombre.
   Es una pista para el auditor, no un veredicto, y puede ir vacío.
 - \`website\` y \`phone\`: tal cual vengan, o \`null\`. No los inventes ni los
@@ -266,6 +267,8 @@ encontrado búsquedas distintas.
 export function prospectorPrompt(args: {
   zoneName: string;
   county: string;
+  /** Ciudad que se asume para lo que caiga dentro del radio. */
+  city: string;
   centerLat: number;
   centerLng: number;
   radiusMeters: number;
@@ -279,7 +282,7 @@ export function prospectorPrompt(args: {
       : "sin sectores fijados: barre los del ICP";
 
   return [
-    `Zona "${args.zoneName}" (${args.county}).`,
+    `Zona "${args.zoneName}" · condado ${args.county} · ciudad por defecto ${args.city}.`,
     `Centro ${args.centerLat}, ${args.centerLng} · radio ${args.radiusMeters} m.`,
     `Sectores que interesan: ${sectores}.`,
     `Ticket mínimo de la zona: ${args.minTicketUsd.toLocaleString("es-ES")} USD.`,

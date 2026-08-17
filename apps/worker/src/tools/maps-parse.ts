@@ -27,6 +27,12 @@ export interface MapsCard {
   sponsored: boolean;
   /** Se rellena abriendo la ficha; la tarjeta del listado no la trae. */
   website: string | null;
+  /**
+   * Si abrir la ficha falló. Sin esto, "no pudimos mirar" y "no tiene web" se
+   * confunden en el mismo `null`, y el auditor recibe como hecho algo que solo
+   * era una navegación que no salió.
+   */
+  detailFailed: boolean;
 }
 
 /** Lo que el navegador devuelve por tarjeta, sin interpretar. */
@@ -177,5 +183,6 @@ export function toCard(raw: RawCard): MapsCard | null {
     lng,
     sponsored: parsed.sponsored,
     website: null,
+    detailFailed: false,
   };
 }

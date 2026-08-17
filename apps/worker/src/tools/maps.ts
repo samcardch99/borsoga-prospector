@@ -222,11 +222,28 @@ export async function searchMaps(args: SearchMapsArgs): Promise<SearchMapsResult
       for (const card of wanted) {
         const item = raw.find((r) => r.href.includes(card.ftid));
         if (!item) continue;
-        try {
-          card.website = await readWebsite(page, item.href);
-        } catch (err) {
-          if (err instanceof MapsBlocked) throw err;
-          log.debug("no se pudo leer la ficha", { negocio: card.name, err: errorMessage(err) });
+        /*
+         * Un reintento, y el fallo se anota en la ficha en vez de tragarse.
+         * Antes esto era un `debug` invisible, y el resultado era que un
+         * negocio con web perfectamente localizable llegaba al auditor como
+         * "sin web" — que es de las peores cosas que puede decir esta
+         * herramienta, porque nadie vuelve a comprobarlo.
+         */
+        for (let intento = 1; intento <= 2; intento += 1) {
+          try {
+            card.website = await readWebsite(page, item.href);
+            card.detailFailed = false;
+            break;
+          } catch (err) {
+            if (err instanceof MapsBlocked) throw err;
+            card.detailFailed = true;
+            if (intento === 2) {
+              log.warn("no se pudo abrir la ficha", {
+                negocio: card.name,
+                err: errorMessage(err),
+              });
+            }
+          }
         }
       }
 
@@ -297,7 +314,7 @@ function line(card: MapsCard): string {
     card.category ?? "sector sin clasificar",
     card.address ?? "sin dirección",
     nota,
-    card.website ?? "SIN WEB",
+    card.website ?? (card.detailFailed ? "SIN COMPROBAR" : "SIN WEB"),
     card.phone ?? "sin teléfono",
     card.ftid,
   ].join(" | ");
@@ -373,6 +390,7 @@ export const searchMapsTool: AgentTool<Input> = {
     }
 
     const conWeb = cards.filter((c) => c.website).length;
+    const sinComprobar = cards.filter((c) => c.detailFailed).length;
 
     return {
       ok: true,
@@ -384,6 +402,9 @@ export const searchMapsTool: AgentTool<Input> = {
           quote: [
             `Búsqueda en Google Maps: "${input.query}" · radio ${input.radiusMeters} m`,
             `${found} negocios dentro del radio; se abrió la ficha de ${cards.length}, ${conWeb} con web`,
+            sinComprobar > 0
+              ? `Ojo: de ${sinComprobar} no se pudo abrir la ficha, así que su web está SIN COMPROBAR — no es que no tengan.`
+              : "",
             found > cards.length
               ? `Quedan ${found - cards.length} sin abrir. Si este término rinde, repítelo con detailLimit más alto.`
               : "Se abrieron todos los que había.",

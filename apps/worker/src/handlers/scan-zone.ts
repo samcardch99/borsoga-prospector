@@ -73,6 +73,7 @@ export async function scanZone(payload: ScanZonePayload, signal: AbortSignal): P
       prompt: prospectorPrompt({
         zoneName: zone.name,
         county: zone.county,
+        city: zone.name.split(" ")[0] ?? zone.name,
         centerLat: zone.centerLat,
         centerLng: zone.centerLng,
         radiusMeters: zone.radiusMeters,
