@@ -1,28 +1,16 @@
 /**
- * Geometría del área de búsqueda. La usan los dos mapas: el grande de la vista
- * principal y el mini mapa del formulario de zona.
+ * Geometría del mapa: lo que hace falta para *pintar* el área.
  *
- * Las conversiones son aproximaciones planas, y a esta escala sobran: una zona
- * son kilómetros, no cientos, y a esa distancia tratar la Tierra como plana se
- * equivoca en metros. Lo que no se puede es ignorar la latitud — un grado de
- * longitud en Miami mide un 10 % menos que en el ecuador, y sin corregirlo el
- * círculo saldría ovalado.
+ * La aritmética de coordenadas —metros por grado, distancias, zoom— vive en
+ * `@borsoga/shared`, porque el worker la necesita igual para decidir si un
+ * negocio cae dentro del radio de la zona. Aquí queda solo lo que produce
+ * GeoJSON o coordenadas de pantalla, que es cosa de la interfaz.
  */
 
 import type { FeatureCollection } from "geojson";
+import { M_PER_DEG_LAT, metersPerDegreeLng, type Area } from "@borsoga/shared";
 
-/** Metros por grado de latitud. Constante a efectos prácticos. */
-const M_PER_DEG_LAT = 111_320;
-
-export function metersPerDegreeLng(lat: number): number {
-  return M_PER_DEG_LAT * Math.cos((lat * Math.PI) / 180) || 1;
-}
-
-export interface Area {
-  centerLat: number;
-  centerLng: number;
-  radiusMeters: number;
-}
+export { distanceMeters, metersPerDegreeLng, zoomForRadius, type Area } from "@borsoga/shared";
 
 /** El área como polígono geográfico, para pintarla en un mapa de verdad. */
 export function areaPolygon(area: Area, steps = 96): FeatureCollection {
@@ -55,23 +43,6 @@ export function radiusHandle(area: Area): { lat: number; lng: number } {
 }
 
 /**
- * Distancia aproximada en metros entre dos puntos cercanos.
- *
- * La conversión de longitud usa la latitud **media** de los dos puntos y no la
- * del primero. Con la del primero, `distancia(a, b)` y `distancia(b, a)` daban
- * resultados distintos — poco, pero una distancia que depende del orden de los
- * argumentos es una trampa esperando a que alguien la pise.
- */
-export function distanceMeters(
-  a: { lat: number; lng: number },
-  b: { lat: number; lng: number },
-): number {
-  const dLat = (b.lat - a.lat) * M_PER_DEG_LAT;
-  const dLng = (b.lng - a.lng) * metersPerDegreeLng((a.lat + b.lat) / 2);
-  return Math.sqrt(dLat * dLat + dLng * dLng);
-}
-
-/**
  * El rectángulo que envuelve el área, como `[[oeste, sur], [este, norte]]`.
  *
  * Se usa en vez de calcular un zoom a mano cuando el contenedor es pequeño o de
@@ -89,10 +60,3 @@ export function areaBounds(area: Area): [[number, number], [number, number]] {
   ];
 }
 
-/** Zoom que mete el diámetro del área en un viewport de ancho dado. */
-export function zoomForRadius(lat: number, radiusMeters: number, viewportPx: number): number {
-  const metersPerPixel = (2 * radiusMeters * 1.3) / viewportPx;
-  const atZoom0 = 156_543.03392 * Math.cos((lat * Math.PI) / 180);
-  const zoom = Math.log2(atZoom0 / metersPerPixel);
-  return Math.min(16, Math.max(8, zoom));
-}

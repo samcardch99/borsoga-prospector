@@ -45,14 +45,16 @@ export async function closeBrowser(): Promise<void> {
 }
 
 /** Página nueva en un contexto limpio: sin cookies heredadas entre prospectos. */
-async function withPage<T>(
+export async function withPage<T>(
   width: number,
   height: number,
   fn: (page: Page) => Promise<T>,
+  options?: { userAgent?: string; locale?: string },
 ): Promise<T> {
   const browser = await getBrowser();
   const context = await browser.newContext({
-    userAgent: config.CRAWL_USER_AGENT,
+    userAgent: options?.userAgent ?? config.CRAWL_USER_AGENT,
+    ...(options?.locale ? { locale: options.locale } : {}),
     viewport: { width, height },
     deviceScaleFactor: 1,
   });
