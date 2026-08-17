@@ -290,7 +290,11 @@ Del handoff §12, adaptado al enfoque agéntico:
 5. ~~Expediente completo con evidencia y capturas~~ ✅
 6. ~~Cola de revisión con veredictos y reverificación~~ ✅
 7. ~~Generador de propuesta: configurar y PDF, luego modo edición~~ ✅
-8. ~~Pipeline y zonas~~ ✅ · la programación cron no se dispara sola todavía
+8. ~~Pipeline y zonas, con la programación cron disparándose sola~~ ✅
+
+Los ocho pasos están cerrados, y las siete pantallas del handoff existen. Lo que
+queda no es "el siguiente paso": son huecos concretos, y casi todos dependen de
+una credencial o de una decisión de negocio. Están en las secciones de abajo.
 
 La Traza va antes que las pantallas: es lo que hace depurable todo lo demás, y
 con un agente que decide por su cuenta hace todavía más falta.
@@ -340,17 +344,18 @@ worker en marcha.
 Las **dos ventanas flotantes en vivo** del handoff §6.1 —"Auditoría web en
 vivo" y "Personas y menciones", ancladas al marcador con la línea de hormigas—
 no están. No es una decisión estética: las tablas `people` y `mentions` no
-tienen todavía quien las escriba. Ninguna de las cuatro herramientas del worker
-recoge directivos ni menciones, y las que lo harían (`search_web` y
-`fetch_external_profile`) son dos de las seis que faltan del paso 3. Construir
-el panel ahora sería pintar un marco vacío.
+tienen todavía quien las escriba. Ninguna de las seis herramientas del worker
+recoge directivos ni menciones, y las que lo harían —`search_web` y
+`fetch_external_profile`— son las dos que necesitan credenciales de un buscador.
+Construir el panel ahora sería pintar un marco vacío.
 
 El **control de zoom** solo aparece con el mapa real, que trae el suyo. En el
 lienzo de reserva no hay nada que ampliar, así que ese hueco lo ocupa el aviso
 de que los tiles no cargaron.
 
-Los botones "Generar propuesta", "Escanear zona" y "Dibujar área" están
-visibles y apagados, con la pista de en qué paso llegan. Se dejan en su sitio
+Siguen apagados el "Escanear zona" de la cabecera —escanear se hace desde la
+vista de Zonas, que es donde está el contexto— y "Dibujar área", que necesita
+el mapa interactivo del formulario de zona y ese no está. Se dejan en su sitio
 en vez de esconderlos porque son parte del layout que hay que recrear, y un
 hueco cambiaría las medidas de las columnas.
 
