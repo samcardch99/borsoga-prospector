@@ -27,6 +27,17 @@ const envSchema = z.object({
   LLM_MAX_TURNS: int.default(40),
 
   /**
+   * Turnos para buscar una zona, aparte de los de auditar.
+   *
+   * Buscar es un trabajo mucho más corto que auditar: cuatro u ocho búsquedas
+   * bien elegidas cubren un sector. Con los 40 del auditor, el prospector los
+   * gastaba todos —diecinueve búsquedas en una zona— porque siempre queda un
+   * sinónimo más que probar. El límite no es una emergencia: es decirle cuánto
+   * vale la pena buscar.
+   */
+  LLM_MAX_TURNS_ZONE: int.default(16),
+
+  /**
    * Deja que el auditor use la búsqueda web integrada del Agent SDK.
    *
    * Va contra la suscripción, no contra una API de terceros, así que no cuesta

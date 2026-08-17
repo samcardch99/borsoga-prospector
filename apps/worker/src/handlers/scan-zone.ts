@@ -83,7 +83,7 @@ export async function scanZone(payload: ScanZonePayload, signal: AbortSignal): P
       ctx,
       schemaName: "ProspectorOutput",
       schema: prospectorOutputJsonSchema,
-      maxTurns: config.LLM_MAX_TURNS,
+      maxTurns: config.LLM_MAX_TURNS_ZONE,
       maxCostUsd: config.LLM_MAX_COST_USD_PER_ZONE,
       onStep,
     });

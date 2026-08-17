@@ -239,7 +239,9 @@ Usa **términos en inglés**. En el sur de Florida los negocios se dan de alta e
 inglés aunque atiendan en español, y buscar en español devuelve una fracción.
 
 Haz varias búsquedas por sector, con sinónimos y con el oficio además del
-servicio. Para cuando dos búsquedas seguidas no traigan a nadie nuevo.
+servicio. **Entre cuatro y ocho búsquedas en total** es lo normal para una zona;
+para en cuanto dos seguidas no traigan a nadie nuevo. Siempre queda un sinónimo
+más que probar, y a partir de cierto punto solo devuelve a los mismos.
 
 ## Qué devolver
 
