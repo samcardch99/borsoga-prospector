@@ -263,6 +263,10 @@ encontrado búsquedas distintas.
   dejes vacíos si la herramienta te los dio: la web es lo único que hace
   auditable a un prospecto.
 - \`rating\` y \`reviewCount\`: 0 si no tiene valoraciones.
+- \`lat\` y \`lng\`: las del **negocio**, copiadas de la línea \`coordenadas:\` que
+  te da la herramienta. Nunca las del centro de la zona: si pones el centro,
+  todos los negocios caen apilados en el mismo punto del mapa y el mapa deja de
+  servir para lo único que sirve, que es ver dónde están.
 - \`notes\`: qué dejaste fuera y por qué. Si descartaste cadenas grandes, o
   negocios fuera del área, o duplicados evidentes, dilo. Una zona que devuelve
   poco y una búsqueda que buscó poco se parecen mucho, y esta nota es lo único
