@@ -118,8 +118,22 @@ export async function scanZone(payload: ScanZonePayload, signal: AbortSignal): P
     tokensOut: run.tokensOut,
     costUsd: run.costUsd,
     input: { zona: zone.name, radio: zone.radiusMeters, sectores: zone.sectors },
+    /*
+     * El informe del agente se guarda entero, no resumido.
+     *
+     * Costó tres diagnósticos equivocados no tenerlo: los prospectos entraban
+     * sin web y no había forma de saber si la perdía el agente al redactar o el
+     * handler al guardar, porque aquí solo quedaba un recuento. Guardar lo que
+     * el agente dijo convierte esa pregunta en una consulta.
+     */
     output: report
-      ? { encontrados: report.businesses?.length ?? 0, busquedas: report.queries, notas: report.notes }
+      ? {
+          encontrados: report.businesses?.length ?? 0,
+          conWeb: report.businesses?.filter((b) => b.website).length ?? 0,
+          busquedas: report.queries,
+          notas: report.notes,
+          negocios: report.businesses,
+        }
       : { errorCode: run.stopReason },
   });
 
@@ -230,10 +244,25 @@ export async function scanZone(payload: ScanZonePayload, signal: AbortSignal): P
     .set({ lastScanAt: new Date(), lastScanProspects: queued })
     .where(eq(zones.id, zoneId));
 
+  /*
+   * Un negocio sin web no se puede auditar, así que si vienen muchos así el
+   * escaneo ha salido mal aunque haya terminado bien. Se avisa: un resultado
+   * pobre que no se queja es indistinguible de una zona pobre.
+   */
+  const sinWeb = report.businesses.filter((b) => !b.website).length;
+  if (sinWeb > 0) {
+    log.warn("negocios sin web declarada", {
+      zona: zone.name,
+      sinWeb,
+      total: report.businesses.length,
+    });
+  }
+
   log.info("zona escaneada", {
     zona: zone.name,
     encontrados: seen.size,
     encolados: queued,
+    conWeb: report.businesses.length - sinWeb,
     busquedas: report.queries?.length ?? 0,
   });
 
