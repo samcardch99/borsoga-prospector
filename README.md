@@ -1,8 +1,13 @@
 # Borsoga Prospector
 
-Plataforma interna de prospección B2B para el sur de Florida. Busca negocios con
-Google Places, audita su presencia digital, detecta deficiencias que Borsoga
-puede resolver y las convierte en una propuesta de colaboración.
+Plataforma interna de prospección B2B para el sur de Florida. Busca negocios en
+Google Maps, audita su presencia digital, detecta deficiencias que Borsoga puede
+resolver y las convierte en una propuesta de colaboración.
+
+Lo hace un agente de principio a fin: elige qué buscar, decide qué mirar de cada
+negocio y cuándo ha visto suficiente. La interfaz enseña ese proceso mientras
+ocurre —la Traza paso a paso, la ventana de auditoría en vivo sobre el mapa— y
+no solo su resultado.
 
 El handoff de diseño original está en `docs/handoff.md`, y la referencia visual
 en `docs/design/prospector-control-center-v3.dc.html` (se abre en el navegador).
@@ -24,31 +29,227 @@ createdb -U postgres borsoga_prospector
 
 pnpm install
 pnpm --filter @borsoga/worker exec playwright install chromium
-cp .env.example .env          # rellena DATABASE_URL y GOOGLE_PLACES_API_KEY
+cp .env.example .env          # basta con DATABASE_URL; Places ya no hace falta
 pnpm db:migrate
 
 pnpm dev                      # web: http://localhost:3000
-pnpm dev:worker               # worker: tira de la cola
+pnpm dev:worker               # worker: tira de la cola y programa las zonas
+
+pnpm typecheck                # los cuatro paquetes
+pnpm test                     # 77 pruebas: scoring, precios, geo, robots, parseo de Maps
 ```
 
-La raíz de `/` es hoy la página de verificación de tokens, no una pantalla del
-producto: sirve para comprobar que los seis temas y los componentes de shadcn
-heredan bien el diseño.
+La raíz de `/` es la vista de Mapa: lista, mapa y expediente resumido leyendo
+Postgres. La página de verificación de tokens se mudó a `/tokens`, y sigue
+sirviendo para comprobar que los seis temas y los componentes de shadcn heredan
+bien el diseño.
+
+La selección y los filtros de la lista viven en la URL (`?p=` y `?f=`), no en
+estado de cliente: así recargar no pierde el sitio, el enlace se puede pasar a
+otra persona, y el expediente se renderiza en el servidor con el prospecto ya
+resuelto.
+
+### El mapa no necesita ninguna clave
+
+MapLibre GL con tiles vectoriales de OpenFreeMap: sin clave, sin registro, sin
+facturación. Funciona nada más clonar.
+
+El motivo de elegirlo **no** fue el coste. `theme.css` ya traía una paleta de
+mapa completa —`--map-bg`, `--water`, `--island`, `--road1` a `--road4`,
+`--block`— porque el handoff §9 trata el mapa como parte del diseño. MapLibre
+consume un style JSON, así que esos tokens se leen y se aplican directamente
+(`src/lib/map-style.ts`) y el mapa cambia con el tema como cualquier otra
+superficie. Con Google habría que recrear la paleta a mano en la consola de
+Cloud, en un Map ID por tema y fuera del repositorio.
+
+La regla de que "en modo claro la rampa del mapa se invierte" no se implementa
+en ningún sitio: ya está en los tokens. En claro `--block` es más oscuro que
+`--island`; en oscuro, más claro que `--map-bg`. Al leerlos tal cual, el mapa se
+invierte solo.
+
+#### La rampa del mapa se ha reajustado
+
+Los valores del prototipo vivían todos dentro de unos 30 niveles de gris, y
+sobre pantalla el mapa salía plano: el agua no se distinguía del suelo y las
+calles no se leían. Se ha ensanchado la rampa en los dos temas, conservando el
+orden que pide el handoff §9 y el carácter neutro cálido:
+
+- El **agua** gana tono azul (`#b9cfda` claro, `#16323f` oscuro) en vez de
+  depender solo del brillo. Es la separación que más se nota.
+- El **oscuro deja de ser casi negro**: `--map-bg` sube de `#101317` a
+  `#1c2126`, y la rampa se abre hacia arriba, que es como se invierte en
+  oscuro (calles más claras que el suelo).
+- Las **manzanas** se pintan al 55 % de opacidad, no al 85 %: `--block` es
+  ahora bastante más oscuro y a plena opacidad el centro de una ciudad se
+  convierte en una mancha sólida que se come las calles.
+
+Las **etiquetas del mapa no usan `--dim` ni `--dim2`**, por el problema de
+contraste que ya documenta el aviso de más abajo: sobre el mapa es peor todavía,
+porque compiten con calles y manzanas en vez de con un panel liso. Usan
+`--text2` para poblaciones y `--muted` para calles y sitios.
+
+Es una desviación consciente de "los colores son finales". Si se quiere revertir,
+está todo en el bloque de mapa de `theme.css` y el estilo lo recoge solo.
+
+Si los tiles no cargan —sin red, o el servicio caído— se cae al lienzo de
+referencia con los prospectos proyectados sobre el área, y lo dice en pantalla.
+OpenFreeMap es un servicio gratuito de mejor esfuerzo; si algún día importa la
+disponibilidad, se autoaloja un extracto del sur de Florida con Protomaps sin
+tocar el código de la vista, porque hablan el mismo formato de estilo.
 
 ### Meter trabajo en la cola sin interfaz
 
-La vista de Zonas todavía no existe, así que el worker trae una utilidad para
-lanzar trabajo a mano. Se borra el día que exista la pantalla.
+La vista de Zonas ya existe, pero el worker conserva su utilidad de línea de
+comandos: sirve para lanzar trabajo suelto y, sobre todo, para mirar qué está
+pasando cuando lo que falla es la propia interfaz.
 
 ```bash
-# Escanear una zona (necesita GOOGLE_PLACES_API_KEY)
+# Escanear una zona: el agente busca en Google Maps, sin claves
 pnpm --filter @borsoga/worker enqueue zone "Doral" miami_dade 25.809 -80.355 8000 kitchens,cabinetry
 
-# Auditar un solo negocio, sin gastar cuota de Places
+# Auditar un solo negocio ya conocido, sin pasar por la búsqueda
 pnpm --filter @borsoga/worker enqueue prospect "Nombre" https://ejemplo.com Miami
+
+# Qué hay en la cola y en qué estado
+pnpm --filter @borsoga/worker enqueue status
+
+# Qué devolvió cada llamada a herramienta, la última primero
+pnpm --filter @borsoga/worker enqueue steps
+
+# Nombre, web, teléfono y coordenadas de los prospectos, leídos de la tabla
+pnpm --filter @borsoga/worker probe-prospects
+
+# La cita íntegra de la última búsqueda en Maps
+pnpm --filter @borsoga/worker probe-step
+
+# Probar el raspado suelto, sin cola ni base de datos
+pnpm --filter @borsoga/worker probe-maps "custom kitchen cabinets" 25.809 -80.355 8000 4
 ```
 
+`probe-prospects` existe por una lección cara: este dato se midió durante horas
+contra `/api/prospects`, que no devuelve `website`, así que salía vacío y
+parecía un fallo de guardado que no existía. Una regla sin la marca que buscas
+no dice "no sé": dice cero.
+
+`status` y `steps` son para cuando lo que falla es la propia interfaz: enseñan
+lo mismo que la Traza, pero sin depender de que la web arranque.
+
+Los prospectos de prueba se reparten por el mapa a partir de su nombre. No es
+cosmético: creados todos en el mismo punto, dos auditorías a la vez apilaban su
+marcador y la ventana en vivo parecía no moverse al cambiar de una a otra.
+
 ---
+
+## La ventana de auditoría en vivo
+
+Sobre el mapa, mientras el worker trabaja, hay una ventana que enseña **qué está
+mirando el auditor ahora mismo**: la URL en la que está, sus últimos pasos con el
+resultado de cada uno, y una miniatura de la página. Una línea de hormigas la une
+con el negocio, que queda marcado con una mira y su nombre.
+
+Con `WORKER_CONCURRENCY=2` hay dos auditorías a la vez y **la ventana sigue a la
+que tú elijas**: el conmutador de la cabecera cambia de una a otra y el mapa vuela
+hasta el negocio elegido. La otra no se pausa — sigue trabajando y su rastro entra
+en la Traza igual.
+
+Tres detalles que no son evidentes leyendo el código:
+
+- La ventana **no es de la zona que se está mirando**. Sale de `jobs`, no de
+  `scans`, así que enseña lo que esté corriendo aunque el prospecto viva en otra
+  zona. Por eso las tres columnas del mapa se pintan siempre, incluso con la zona
+  vacía: un mensaje a pantalla completa se llevaba la ventana por delante.
+- La miniatura sale del **paso de traza**, no de `evidence`. La evidencia no se
+  escribe hasta que el agente entrega el informe, y para entonces la auditoría ya
+  no está viva. El worker anota la clave de la captura en el `output` del paso, en
+  el mismo momento en que guarda la imagen.
+- La línea se proyecta con `map.project()` y se recoloca en cada `onMove`. En SVG
+  los porcentajes solo valen en `line` y `circle`, así que hay que dar
+  coordenadas de pantalla de verdad.
+
+---
+
+## El flujo completo, ejecutado de verdad
+
+Se recorrió entero el 16 de agosto de 2026 con el worker en marcha y
+`claude-code-local`: prospecto → auditoría del agente → hallazgos con evidencia
+→ revisión humana → propuesta → redacción con IA → documento listo para PDF.
+
+Lo que salió, con números:
+
+- La auditoría produjo **5 hallazgos** en 87 s por **$0,42**. Tres de los cinco
+  los encontró `lighthouse` (peso de 15 MB, accesibilidad en 87, caché mal
+  configurada), que es la herramienta que más se está ganando el sitio.
+- Confirmar tres hallazgos en la cola de revisión subió el score de **16 a 24**
+  y el ticket a **$18.000**. La revisión humana mueve el número, que era el
+  punto.
+- La propuesta se armó sola desde los hallazgos confirmados, con dos fases
+  derivadas del score de cada rama, y la IA redactó los dos bloques de texto.
+
+**El escaneo de zona ya funciona, y sin ninguna clave.** Durante mucho tiempo no
+se pudo probar —`GOOGLE_PLACES_API_KEY` estaba vacía y `scan.zone` agotaba sus
+cinco intentos—, así que el resto del flujo se ejercitaba con prospectos creados
+a mano. Hoy el descubrimiento lo hace el agente raspando Google Maps
+(`search_maps`), y un escaneo de Doral devuelve negocios reales con su web,
+teléfono, valoración y posición:
+
+    Atem Construction Inc     atemconstruction.net    25.808795, -80.3642884
+    Brito Built               britobuilt.com          25.8106612,-80.3660899
+    Jomar Marble & Granite    jomarmarble.com         25.7928095,-80.3480642
+
+Sobre el raspado y sus condiciones —que va contra los términos de Google, que
+se rinde ante un CAPTCHA en vez de intentar resolverlo, y por qué se presenta
+como un Chrome normal— está todo escrito en `apps/worker/src/tools/maps.ts`.
+
+### Tres cosas que aprendimos ejecutándolo
+
+**`networkidle` no es una espera, es una apuesta.** `render_dom` y `screenshot`
+navegaban con `waitUntil: "networkidle"`, que exige medio segundo sin una sola
+petición de red. Una web de estudio con analítica, chat y tipografías externas
+no lo consigue casi nunca: de seis intentos seguidos, cuatro murieron con
+`RENDER_FAILED` a los 20 000 ms clavados, y cada uno es una página que el
+auditor no llegó a ver. Ahora la navegación termina en `domcontentloaded` y el
+asentamiento va aparte, con tres segundos que pueden expirar sin romper nada.
+El mismo sitio que fallaba a los 20 s ahora se resuelve en 5,3 s. No lo arregla
+todo —zahahadid.com sigue agotando el plazo, y eso ya es del sitio—, pero deja
+de perderse por un detalle de espera lo que sí se podía mirar.
+
+
+**El tope de coste se queda corto con las herramientas nuevas.** Una auditoría
+reventó el límite de $2,50 llegando a $3,11 antes de entregar informe: `crawl_site`
+y `lighthouse` devuelven mucho más texto que las cuatro anteriores y el contexto
+crece rápido. La misma auditoría en otro run costó $0,42, así que la varianza es
+enorme —la cifra de `claude-code-local` es nocional y depende de la caché de
+prefijo—. Conviene revisar el tope, o recortar lo que devuelven las herramientas.
+
+**Un sitio detrás de un muro anti-bot no es un sitio pequeño.** `crawl_site`
+resumía un 307 en bucle como "1 página · 0 rotas", que se lee como un sitio sano
+y diminuto; ahora devuelve `REDIRECT_LOOP` o `BLOCKED` y dice que lo que se vea
+de ese sitio no es lo que ve una persona.
+
+## El build de producción usa webpack, no Turbopack
+
+`pnpm build` pasa `--webpack`. `next dev` sigue en Turbopack, que va bien.
+
+El motivo es un fallo concreto y comprobado: Turbopack resuelve `next/font/google`
+en su binario nativo y pide a `fonts.gstatic.com` URLs de JetBrains Mono que hoy
+devuelven **404**. Las mismas fuentes pedidas al CSS de Google en vivo devuelven
+200, así que no es que las fuentes hayan desaparecido — es que Turbopack tiene
+una instantánea desfasada. El build entero se cae con doce errores de
+`Module not found` que apuntan a un `.module.css` interno y no dicen nada de
+fuentes.
+
+```
+# la URL que pide Turbopack
+…/jetbrainsmono/v24/…BNntkaToggR7BYaTNPx7cwgknk-6nFg.woff2   → 404
+# la que sirve Google ahora mismo
+…/jetbrainsmono/v24/…BNntkaToggR7BYRbKPx3cwgknk-6nFg.woff2   → 200
+```
+
+Con webpack, que pide el CSS en vivo, el build pasa limpio.
+
+**Cuándo quitarlo:** cuando una versión de Next traiga la instantánea al día.
+Se comprueba en un minuto — quita `--webpack` y lanza `pnpm build`. Si pasa, el
+fallo está arreglado y la bandera sobra.
 
 ## Decisiones que se apartan del handoff
 
@@ -168,28 +369,193 @@ Del handoff §12, adaptado al enfoque agéntico:
 1. ~~Esquema de base de datos y contrato de datos~~ ✅
 2. ~~Tokens de diseño y tema~~ ✅
 3. ~~Worker: herramientas del agente + `LLMProvider` + Traza~~ ✅
-4. Mapa + lista + expediente resumido con datos reales
-5. Expediente completo con evidencia y capturas
-6. Cola de revisión con veredictos y reverificación
-7. Generador de propuesta: configurar y PDF, luego modo edición
-8. Pipeline y zonas programadas
+4. ~~Mapa + lista + expediente resumido con datos reales~~ ✅
+5. ~~Expediente completo con evidencia y capturas~~ ✅
+6. ~~Cola de revisión con veredictos y reverificación~~ ✅
+7. ~~Generador de propuesta: configurar y PDF, luego modo edición~~ ✅
+8. ~~Pipeline y zonas, con la programación cron disparándose sola~~ ✅
+
+Los ocho pasos están cerrados, y las siete pantallas del handoff existen. Lo que
+queda no es "el siguiente paso": son huecos concretos, y casi todos dependen de
+una credencial o de una decisión de negocio. Están en las secciones de abajo.
 
 La Traza va antes que las pantallas: es lo que hace depurable todo lo demás, y
 con un agente que decide por su cuenta hace todavía más falta.
 
 ### Qué falta del paso 3
 
-De las diez herramientas que declara el contrato hay cuatro implementadas
-(`places_details`, `fetch_served_html`, `render_dom`, `screenshot`). Las otras
-seis —`crawl_site`, `lighthouse`, `search_web`, `fetch_external_profile`,
-`image_fingerprint` y `probe_contact_form`— están declaradas pero no
-registradas, así que el agente no las ve y no puede prometer evidencia que
-nadie recogió. Ampliar la superficie es añadirlas en
-`apps/worker/src/tools/`, no meter pasos antes del agente.
+De las diez herramientas que declara el contrato hay seis implementadas:
+`places_details`, `fetch_served_html`, `render_dom`, `screenshot`, `crawl_site`
+y `lighthouse`. Las cuatro que faltan están declaradas pero no registradas, así
+que el agente no las ve y no puede prometer evidencia que nadie recogió.
 
-La Traza escribe en la base y se puede leer con `psql`; la **pantalla** de
-Traza (handoff §6.6) es parte del trabajo de interfaz que viene después.
+- `search_web` y `fetch_external_profile` **necesitan credenciales** de un
+  buscador. Sin ellas no hay forma de mirar prensa, directorios ni perfiles.
+  Como paliativo, `LLM_WEB_SEARCH` enciende la `WebSearch` integrada del Agent
+  SDK, que va contra la suscripción y no contra una API de terceros. Cubre
+  *encontrar*, no *citar*: una búsqueda no pasa por `observe()`, así que no
+  produce `Observation` y no puede sostener un hallazgo. Sirve para dar con la
+  URL; leerla sigue siendo trabajo de `fetch_served_html` o `render_dom`.
+  Tampoco aparece en la Traza, porque las integradas no pasan por
+  `recordToolCall` — un agujero de observabilidad que sigue abierto.
+- `image_fingerprint` sirve para detectar banco de imágenes, y eso exige poder
+  comparar contra algo de fuera. Sin `search_web` solo podría encontrar
+  duplicados dentro del propio sitio, que es un hallazgo mucho más flojo.
+- `probe_contact_form` **manda un mensaje real a un negocio real**. El handoff
+  §10.3 lo autoriza en modo prueba, pero registrarla significa que el agente
+  decide por su cuenta escribir a un prospecto, sin nadie en medio. Eso es una
+  decisión de negocio, no de implementación, y está sin tomar.
 
-Sin implementar todavía: `finding.recheck` y `proposal.draft`, los dos tipos de
-trabajo que la cola ya contempla y el worker rechaza con "tipo de trabajo no
-soportado".
+Los cuatro tipos de trabajo de la cola están implementados y **los cuatro se han
+visto correr** con `claude-code-local`: `scan.zone`, `audit.prospect`,
+`finding.recheck` (44 s, escribe evidencia nueva y deja el veredicto en
+`pending`) y `proposal.draft` (12 s, dos bloques redactados).
+
+Ejecutar el worker de verdad destapó un fallo que la revisión de código no había
+visto: una reverificación puede cambiar la severidad de un hallazgo, y la
+severidad entra en el score, pero solo la web recalculaba. El score se quedaba
+con el valor viejo y el mapa pintaba el marcador del color de antes. El
+recálculo vive ahora en `packages/db/src/scoring.ts`, que es el único sitio
+donde lo ven los dos.
+
+**La pantalla de Traza ya existe** (`/traza`), y lo primero que ha destapado es
+que los contadores de `scans` y las filas de `trace_steps` no cuadran: en el
+escaneo de pruebas la tabla dice 11 pasos y 6 errores, y hay 4 filas, todas
+`ok`. Hubo trabajo que ocurrió sin registrarse como paso.
+
+No está probado de dónde sale la diferencia — `scan.zone` y `audit.prospect`
+llaman los dos a `recordStep`, así que puede ser un paso que no se escribe o un
+contador que suma algo que no es un paso. La pantalla avisa de la discrepancia
+sin atribuirle causa, que es lo único comprobable hoy. Merece un rato con el
+worker en marcha.
+
+### Qué falta del paso 4
+
+De las **dos ventanas flotantes en vivo** del handoff §6.1 está la primera:
+"Auditoría web en vivo", anclada al marcador con la línea de hormigas y con
+conmutador entre las auditorías concurrentes.
+
+Falta la segunda, **"Personas y menciones"**, y no por estética: las tablas
+`people` y `mentions` no tienen todavía quien las escriba. Ninguna de las seis
+herramientas del worker recoge directivos ni menciones, y las que lo harían
+—`search_web` y `fetch_external_profile`— siguen sin construirse. Pintar ese
+panel ahora sería pintar un marco vacío.
+
+El **control de zoom** solo aparece con el mapa real, que trae el suyo. En el
+lienzo de reserva no hay nada que ampliar, así que ese hueco lo ocupa el aviso
+de que los tiles no cargaron.
+
+Siguen apagados el "Escanear zona" de la cabecera —escanear se hace desde la
+vista de Zonas, que es donde está el contexto— y "Dibujar área", que necesita
+el mapa interactivo del formulario de zona y ese no está. Se dejan en su sitio
+en vez de esconderlos porque son parte del layout que hay que recrear, y un
+hueco cambiaría las medidas de las columnas.
+
+### Qué falta del paso 5
+
+Las **capturas de evidencia no se han visto funcionando**. La ruta que las
+sirve existe (`/api/captura/…`, con el mismo anclaje al repositorio que usa el
+worker) y el expediente ya reserva su hueco, pero las evidencias que hay en la
+base salieron de `render_dom` y no llevan imagen: `screenshot_storage_key` está
+vacío en todas. La tarjeta lo dice en el hueco en vez de callárselo.
+
+`STORAGE_LOCAL_PATH` pasa a resolverse desde la **raíz del repositorio** y no
+desde el cwd. Antes el worker (que corre en `apps/worker`) y la web (en
+`apps/web`) apuntaban a carpetas distintas, así que la web nunca habría
+encontrado una captura.
+
+"Descartar" el prospecto entero sigue apagado: llega con el pipeline, en el
+paso 8.
+
+### Qué falta del paso 6
+
+`finding.recheck` ya está implementado en el worker y encolado desde la web,
+pero **el handler no se ha visto correr**: hace falta el worker en marcha y un
+proveedor de LLM disponible, y la verificación de esta rama se hizo con el
+worker apagado. Lo que sí está probado es la mitad de la web — encolar deja el
+trabajo en la cola y devuelve el hallazgo a `pending`, que es justo lo que debe
+pasar con el worker parado.
+
+No hay usuarios ni sesiones, así que `findings.reviewed_by` se queda a null.
+Cuando los haya, se rellena en `apps/web/src/app/revision/actions.ts`.
+
+### Qué falta del paso 7
+
+El **modo de edición ya está**: bloques arrastrables, activables y borrables,
+selector de tono y reescritura con IA. El documento se arma desde los bloques,
+así que reordenar o desactivar se ve al instante — no hay dos maquetaciones que
+mantener a la par.
+
+La **reescritura con IA no se ha visto correr**, como el resto de lo que pasa
+por el worker. Lo que sí está probado es que solo se le pasan los bloques
+`ai_text`: el filtro se aplica dos veces, en la web al encolar y otra vez en el
+handler, porque el payload viene del navegador y no es la autoridad sobre qué se
+puede reescribir. Los hallazgos y los precios no llegan al modelo ni por
+accidente — el esquema de salida no tiene dónde ponerlos.
+
+El **PDF sale de imprimir**, no de un servicio de render: el navegador ya sabe
+hacer un PDF de una página y el documento está maquetado para que al imprimir
+solo quede él. No se ha llegado a generar un PDF real en este entorno; lo
+verificado es que la hoja `@media print` está en el bundle, que el panel lleva
+`print:hidden` y que el botón llama a `window.print()`.
+
+Entrar en `/propuestas/[id]` **crea el borrador** si no existe. Es deliberado:
+todo lo que lleva la propuesta sale del expediente, así que pedir un clic para
+generar algo ya determinado solo añadiría un paso. Un borrador ya tocado no se
+pisa.
+
+Los importes y los entregables de `PHASE_TEMPLATE` son un marcador de posición,
+igual que los de `BASE_TICKET_USD`. Están juntos en
+`packages/shared/src/pricing.ts` para que revisarlos sea abrir un archivo.
+
+### Qué falta del paso 8
+
+La **programación cron ya se dispara**, pero solo mientras el worker esté en
+marcha: el planificador vive dentro de él (`apps/worker/src/scheduler.ts`) y no
+como proceso aparte. Un cron del sistema tendría que saber la URL de la base,
+cargar el mismo `.env` y duplicar el encolado; y con el worker apagado
+encolaría trabajos que nadie va a atender.
+
+Las expresiones se leen en **hora de Florida**, no en la del servidor ni en
+UTC. Sin fijarlo, `0 3 * * 1` cambiaría de significado el día que esto se
+despliegue en un servidor en UTC.
+
+Las **tarjetas del kanban no se han visto con datos**: el único prospecto de la
+base está descartado y los descartados no entran al pipeline. Lo verificado son
+las seis columnas, sus contadores y la barra de métricas. Las columnas se pintan
+aunque estén vacías a propósito — un tablero vacío sigue diciendo cuáles son las
+etapas, y sustituirlo por una frase lo esconde.
+
+El **mini mapa arrastrable** del formulario de zona (handoff §6.7) sigue sin
+estar: los campos de centro y radio se escriben a mano.
+
+Se intentó y se retiró. El componente montaba —lienzo, marcadores del centro y
+del borde bien colocados, arrastre cableado— pero el mapa nunca terminaba de
+cargar el estilo: ni `load`, ni `error`, ni nada en consola, con el mismo style
+JSON que el mapa grande sí carga en la misma sesión.
+
+**El diagnóstico era falso.** Se encontró después, al construir la ventana de
+auditoría en vivo: la pestaña se estaba mirando desde fuera, sin primer plano, y
+con `document.visibilityState === "hidden"` el navegador no ejecuta
+`requestAnimationFrame`. MapLibre pinta cada fotograma con rAF, así que sin
+primer plano no dibuja nada, no dispara `load` y ni siquiera `triggerRepaint()`
+produce un `render`. El lienzo se queda blanco y no hay error en ninguna parte,
+porque no hay error.
+
+Cómo reconocerlo: el mapa responde a todo lo que no sea pintar. `map.loaded()`
+es `true`, `map.isStyleLoaded()` es `true` y `map.queryRenderedFeatures()`
+devuelve cientos de elementos, pero la pantalla está en blanco. Si eso pasa,
+mira `document.visibilityState` antes de tocar el código. Vale para cualquiera
+que revise esta aplicación con un navegador automatizado.
+
+Así que el mini mapa probablemente nunca estuvo roto y puede volver. Lo que sí
+se quedó es `apps/web/src/lib/geo.ts`, donde vive ahora la geometría del área
+que antes estaba embebida en el mapa grande.
+
+Los **filtros de responsable y periodo** del pipeline tampoco están, porque no
+hay usuarios a quien asignar nada.
+
+El movimiento entre etapas va por un selector en cada tarjeta y no arrastrando.
+El handoff describe el arrastre para los bloques de la propuesta, no para el
+kanban, y un `select` funciona igual con teclado, con ratón y en pantalla
+estrecha.

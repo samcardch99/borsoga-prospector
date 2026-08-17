@@ -7,13 +7,20 @@
     "dev": "node --env-file=../../.env --import tsx --watch src/index.ts",
     "start": "node --env-file=../../.env --import tsx src/index.ts",
     "enqueue": "node --env-file=../../.env --import tsx src/cli/enqueue.ts",
-    "typecheck": "tsc --noEmit"
+    "test": "node --import tsx --test 'src/**/*.test.ts'",
+    "typecheck": "tsc --noEmit",
+    "probe-maps": "node --env-file=../../.env --import tsx src/cli/probe-maps.ts",
+    "probe-step": "node --env-file=../../.env --import tsx src/cli/probe-step.ts",
+    "probe-prospects": "node --env-file=../../.env --import tsx src/cli/probe-prospects.ts"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.233",
     "@anthropic-ai/sdk": "^0.117.1",
     "@borsoga/db": "workspace:*",
     "@borsoga/shared": "workspace:*",
+    "chrome-launcher": "^1.1.2",
+    "cron-parser": "^5.0.0",
+    "lighthouse": "^12.8.2",
     "drizzle-orm": "^0.44.0",
     "playwright": "^1.49.0",
     "zod": "^4.0.0"

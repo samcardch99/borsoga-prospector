@@ -144,6 +144,145 @@ export const auditorOutputJsonSchema = (() => {
   return schema as Record<string, unknown>;
 })();
 
+// ─── Descubrimiento de una zona ──────────────────────────────────────────────
+
+/**
+ * Un negocio encontrado por el prospector, antes de auditarlo.
+ *
+ * Es deliberadamente pobre. Aquí no se decide si el negocio vale: eso es el
+ * trabajo del auditor, que abrirá su web y mirará. Lo único que se pide es que
+ * exista, que esté dentro del área y que se pueda volver a él, de ahí que
+ * `sourceId` sea lo único imprescindible. Un negocio sin web sigue siendo un
+ * negocio, y muchas veces es justo el que más falta le hace un estudio.
+ */
+export const discoveredBusinessSchema = z.object({
+  /** Identificador estable de la fuente. De Maps, el `0x…:0x…` del enlace. */
+  sourceId: z.string().min(1),
+  name: z.string().min(1),
+  address: z.string().min(1),
+  city: z.string().min(1),
+  county: countySchema,
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+  /*
+   * Cadena vacía y cero en vez de `null`, y no por gusto.
+   *
+   * Con `.nullable()` estos cuatro campos volvían **siempre** null: la web, el
+   * teléfono y la valoración de cinco negocios seguidos, mientras que el
+   * nombre, la dirección y las coordenadas —que no son nulables— llegaban
+   * perfectos. La herramienta las devolvía ("web: https://britobuilt.com/" en
+   * su observación, literal) y se perdían al construir la salida estructurada:
+   * un `anyOf: [tipo, null]` se colapsa al null.
+   *
+   * Cuesta un vacío que hay que traducir en el handler, y a cambio los datos
+   * llegan. Un negocio sin web es "" y se convierte en `null` al guardarlo.
+   */
+  /** URL, o cadena vacía si no tiene. Nunca null: ver arriba. */
+  website: z.string(),
+  /** Teléfono, o cadena vacía si no tiene. */
+  phone: z.string(),
+  /** Qué sectores parece tocar. Pista para el auditor, no veredicto. */
+  sectors: z.array(sectorSchema),
+  /** Nota media, o 0 si el negocio no tiene valoraciones. */
+  rating: z.number().min(0).max(5),
+  /** Número de reseñas, 0 si no tiene. */
+  reviewCount: z.number().int().nonnegative(),
+});
+
+/**
+ * La salida de un `scan.zone`.
+ *
+ * `queries` no es decorativo: es lo que permite entender por qué una zona
+ * devolvió lo que devolvió, y repetir o corregir la búsqueda. Sin eso, un
+ * escaneo pobre es indistinguible de una zona pobre.
+ */
+export const prospectorOutputSchema = z.object({
+  businesses: z.array(discoveredBusinessSchema),
+  /** Los términos que se llegaron a buscar, en el orden en que se buscaron. */
+  queries: z.array(z.string().min(1)),
+  /** Qué se descartó y por qué: cadenas grandes, fuera de área, duplicados. */
+  notes: z.string().min(1),
+});
+
+export type ProspectorOutputParsed = z.infer<typeof prospectorOutputSchema>;
+export type DiscoveredBusiness = z.infer<typeof discoveredBusinessSchema>;
+
+export const prospectorOutputJsonSchema = (() => {
+  const { $schema: _ignored, ...schema } = z.toJSONSchema(prospectorOutputSchema, {
+    target: "draft-2020-12",
+  });
+  return schema as Record<string, unknown>;
+})();
+
+// ─── Reverificación de un hallazgo ───────────────────────────────────────────
+
+/**
+ * La salida de un `finding.recheck`: mirar otra vez **un** hallazgo concreto.
+ *
+ * Fíjate en lo que NO lleva: veredicto. La regla del handoff §5 es que solo un
+ * humano mueve un hallazgo a confirmado, matizado o descartado, y una
+ * reverificación no es una excepción — devuelve el hallazgo a `pending` con
+ * prueba fresca para que alguien vuelva a decidir.
+ *
+ * `stillHolds` es la lectura del agente, no un veredicto: si dice que ya no se
+ * sostiene, el hallazgo se marca para no entrar en propuestas y espera igual a
+ * que un humano lo descarte.
+ */
+export const recheckOutputSchema = z.object({
+  stillHolds: z.boolean(),
+  /** Qué ha cambiado desde la última verificación, o por qué sigue igual. */
+  reasoning: z.string().min(1),
+  title: z.string().min(1).max(160),
+  description: z.string().min(1),
+  clientGain: z.string().min(1),
+  severity: severitySchema,
+  /** Sin ref no hay hallazgo, tampoco al reverificar. */
+  evidenceRef: z.string().min(1, "la reverificación cita una observación real"),
+  additionalEvidenceRefs: z.array(z.string().min(1)).optional(),
+});
+
+export type RecheckOutputParsed = z.infer<typeof recheckOutputSchema>;
+
+/** Mismo tratamiento que el del auditor: sin `$schema`. */
+export const recheckOutputJsonSchema = (() => {
+  const { $schema: _ignored, ...schema } = z.toJSONSchema(recheckOutputSchema, {
+    target: "draft-2020-12",
+  });
+  return schema as Record<string, unknown>;
+})();
+
+// ─── Redacción de bloques de propuesta ───────────────────────────────────────
+
+/**
+ * La salida de un `proposal.draft`: el texto de los bloques marcados como
+ * "texto IA", y nada más.
+ *
+ * Lo que este esquema NO permite es tan importante como lo que permite. No hay
+ * sitio para hallazgos, ni para precios, ni para fases: esos salen de la base y
+ * el modelo no los toca. Si algún día alguien quiere que la IA "mejore" un
+ * hallazgo, tendrá que cambiar este esquema a propósito, y ese es exactamente
+ * el freno que se busca.
+ */
+export const proposalDraftOutputSchema = z.object({
+  blocks: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        content: z.string().min(1),
+      }),
+    )
+    .min(1),
+});
+
+export type ProposalDraftOutputParsed = z.infer<typeof proposalDraftOutputSchema>;
+
+export const proposalDraftOutputJsonSchema = (() => {
+  const { $schema: _ignored, ...schema } = z.toJSONSchema(proposalDraftOutputSchema, {
+    target: "draft-2020-12",
+  });
+  return schema as Record<string, unknown>;
+})();
+
 // ─── Acciones de revisión ────────────────────────────────────────────────────
 
 export const reviewActionSchema = z

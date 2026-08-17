@@ -25,11 +25,77 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().default(""),
   LLM_MODEL: z.string().default("claude-opus-5"),
   LLM_MAX_TURNS: int.default(40),
-  LLM_MAX_COST_USD_PER_PROSPECT: num.default(2.5),
+
+  /**
+   * Turnos para buscar una zona, aparte de los de auditar.
+   *
+   * Buscar es un trabajo mucho más corto que auditar: cuatro u ocho búsquedas
+   * bien elegidas cubren un sector. Con los 40 del auditor, el prospector los
+   * gastaba todos —diecinueve búsquedas en una zona— porque siempre queda un
+   * sinónimo más que probar. El límite no es una emergencia: es decirle cuánto
+   * vale la pena buscar.
+   */
+  LLM_MAX_TURNS_ZONE: int.default(16),
+
+  /**
+   * Búsquedas de Maps por escaneo. Es el tope que de verdad acota un escaneo:
+   * ver la explicación en `tools/maps.ts`, junto al contador.
+   */
+  MAPS_MAX_SEARCHES_PER_SCAN: int.default(8),
+
+  /**
+   * Deja que el auditor use la búsqueda web integrada del Agent SDK.
+   *
+   * Va contra la suscripción, no contra una API de terceros, así que no cuesta
+   * dinero — pero sí engorda el prefijo del harness con la definición de la
+   * herramienta. Es una bandera para poder medir la diferencia y decidir con
+   * datos, no de memoria.
+   */
+  LLM_WEB_SEARCH: bool.default(true),
+  /*
+   * El tope por auditoría. A 2,5 se perdían informes enteros: el agente gastaba
+   * el presupuesto y se quedaba sin entregar, y en una tanda de 25 prospectos
+   * eso son varios perdidos. `crawl_site` y `lighthouse` devuelven mucho más
+   * texto que las herramientas con las que se fijó esta cifra.
+   */
+  LLM_MAX_COST_USD_PER_PROSPECT: num.default(4),
+
+  /**
+   * El tope para buscar una zona entera. Es más alto que el de una auditoría
+   * porque una búsqueda son varias llamadas a Maps y cada una devuelve una
+   * lista larga, pero se gasta una vez por escaneo y no una por negocio.
+   */
+  LLM_MAX_COST_USD_PER_ZONE: num.default(6),
 
   WORKER_CONCURRENCY: int.default(2),
   WORKER_ID: z.string().default(`worker-${process.pid}`),
   WORKER_POLL_MS: int.default(2_000),
+
+  /**
+   * Cuántos prospectos audita como mucho un escaneo de zona.
+   *
+   * Es el freno de gasto del sistema. Sin él, `scan.zone` encola una auditoría
+   * por cada negocio que devuelve Places, y cada auditoría puede llegar a
+   * `LLM_MAX_COST_USD_PER_PROSPECT`: una zona con cien negocios se convierte en
+   * una factura de tres cifras sin que nadie haya dicho que sí a eso.
+   *
+   * Los que sobran no se pierden: quedan guardados como prospectos sin auditar
+   * y se pueden encolar a mano o subiendo este número a propósito.
+   */
+  SCAN_MAX_PROSPECTS: int.default(25),
+
+  /**
+   * Con qué agente de usuario se pide Google Maps.
+   *
+   * Aparte del resto del rastreo, y con un Chrome corriente por defecto, porque
+   * con el agente propio del worker Maps no devuelve la lista. Va explícito y
+   * con su motivo escrito, en vez de escondido dentro del raspador.
+   */
+  MAPS_USER_AGENT: z
+    .string()
+    .default(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+    ),
 
   CRAWL_USER_AGENT: z.string().default("BorsogaProspector/0.1 (+https://borsoga.studio/bot)"),
   CRAWL_REQUESTS_PER_SECOND: num.default(1),

@@ -193,3 +193,38 @@
     outline-offset: 2px;
   }
 }
+
+/*
+ * ── Impresión ─────────────────────────────────────────────────────────────
+ *
+ * El PDF de la propuesta sale de aquí: no hay servicio de render ni
+ * dependencia nueva, el navegador ya sabe hacer un PDF de una página. Lo que
+ * hace falta es que al imprimir solo quede el documento.
+ *
+ * `print-color-adjust` es imprescindible: por defecto los navegadores tiran
+ * los fondos al imprimir, y el bloque del siguiente paso vive sobre
+ * `--accent-soft`. Sin esto el PDF sale con un hueco blanco donde debería
+ * estar el cierre de la propuesta.
+ */
+@media print {
+  @page {
+    margin: 18mm 16mm;
+  }
+
+  html,
+  body {
+    background: #fff;
+    height: auto;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Que no se parta un hallazgo ni una fase entre dos páginas. */
+  li,
+  section {
+    break-inside: avoid;
+  }
+}

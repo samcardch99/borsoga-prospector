@@ -31,9 +31,14 @@
   --crit: #a2454f; --crit2: #8d3d46; --warn: #8a6a2f; --warn2: #75591f;
   --warn-soft: #f4ecdd; --ok: #4d7a56;
   --b1: #4a6b85; --b1-soft: #e9edf2; --b3: #8a6a45; --b3-soft: #f3ece3;
-  --map-bg: #f1efea; --map-bg2: #f1efea; --water: #dbe4e5; --island: #e8e5df;
-  --road1: #e2ded6; --road2: #e9e5de; --road3: #d4cfc5; --road4: #dcd7ce;
-  --block: #d6d1c8;
+  /* Rampa del mapa. Ver el aviso de contraste del README: los valores del
+     prototipo vivían en 30 niveles de gris y sobre pantalla el mapa salía
+     plano — el agua no se distinguía del suelo. Se conserva el orden que pide
+     el handoff §9 (fondo claro, calles más oscuras, manzanas más todavía) y se
+     separa la rampa; el agua además gana tono azul para no depender del brillo. */
+  --map-bg: #f6f4f0; --map-bg2: #f6f4f0; --water: #b9cfda; --island: #ebe7e0;
+  --road1: #c8c0b0; --road2: #ddd6c9; --road3: #aca291; --road4: #bdb5a5;
+  --block: #b3aa99;
   --pin-hi: #f3ead9; --pin-mid: #f4ecdb;
   --btn-bg: #1c1d20; --btn-fg: #faf8f4; --btn-bg-h: #34363b;
   /* acento por defecto del modo claro: bronce */
@@ -72,9 +77,12 @@
   --crit: #c4707a; --crit2: #cf858d; --warn: #c0a068; --warn2: #d0b585;
   --warn-soft: #282216; --ok: #8faa8f;
   --b1: #93a9bd; --b1-soft: #1d2329; --b3: #c0a482; --b3-soft: #28221b;
-  --map-bg: #101317; --map-bg2: #101317; --water: #0d1418; --island: #12161a;
-  --road1: #1a1e23; --road2: #161a1e; --road3: #22272d; --road4: #1c2126;
-  --block: #151a1e;
+  /* Oscuro leve, no negro. #101317 dejaba el mapa casi apagado y las calles
+     invisibles; se sube el suelo y se ensancha la rampa hacia arriba, que es
+     como se invierte en oscuro (calles más claras que el suelo). */
+  --map-bg: #1c2126; --map-bg2: #1c2126; --water: #16323f; --island: #232930;
+  --road1: #39424c; --road2: #2c333b; --road3: #4d5865; --road4: #434c57;
+  --block: #293038;
   --pin-hi: #211c12; --pin-mid: #221b12;
   --btn-bg: #e9eaec; --btn-fg: #14161a; --btn-bg-h: #d1d4d8;
   /* acento por defecto del modo oscuro: bronce */

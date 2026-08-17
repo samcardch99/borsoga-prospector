@@ -26,6 +26,8 @@ import type { Evidence, EvidenceLayer } from "./types";
 export type AgentToolName =
   /** Ficha de Places por placeId. Cachea 30 días; cuenta contra la cuota. */
   | "places_details"
+  /** Descubrimiento: negocios de una zona raspando Google Maps. */
+  | "search_maps"
   /** HTML tal cual lo sirve el servidor — lo que ve el buscador. */
   | "fetch_served_html"
   /** DOM tras ejecutar JS en navegador real — lo que ve el usuario. */
@@ -106,6 +108,16 @@ export interface AgentToolContext {
   signal: AbortSignal;
   /** Buena vecindad: el worker aplica el límite por dominio aquí. */
   rateLimit(domain: string): Promise<void>;
+  /**
+   * El área de la zona que se está escaneando.
+   *
+   * Va aquí y no en la entrada de `search_maps` porque *dónde* buscar no es
+   * decisión del agente: lo fija la zona. Cuando lo era, el agente estrechaba
+   * el radio por su cuenta —2 000 m en una zona de 8 000— y casi todos los
+   * resultados caían fuera del filtro de distancia. Buscaba bien y encontraba
+   * poco, que es el fallo más difícil de ver.
+   */
+  area?: { lat: number; lng: number; radiusMeters: number };
 }
 
 // ─── El run ──────────────────────────────────────────────────────────────────

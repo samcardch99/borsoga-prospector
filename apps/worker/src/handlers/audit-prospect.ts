@@ -20,7 +20,9 @@ import {
 import {
   auditorOutputJsonSchema,
   auditorOutputSchema,
+  branchTickets,
   resolveEvidence,
+  ticketEstimate,
   totalScore,
   type AgentToolCall,
   type AgentToolContext,
@@ -33,7 +35,6 @@ import { config } from "../config";
 import { errorMessage, log } from "../log";
 import { waitTurn } from "../net/politeness";
 import { recordStep, recordToolCall } from "../persist/trace";
-import { branchTickets, ticketEstimate } from "../pricing";
 import { auditorPrompt, auditorSystem } from "../prompts";
 import { getProvider } from "../providers";
 import { auditorTools } from "../tools";

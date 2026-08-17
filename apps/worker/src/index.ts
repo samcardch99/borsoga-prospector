@@ -11,8 +11,11 @@ import { claimJobs, completeJob, db, failJob, pgClient, reapStaleJobs } from "@b
 import type { ClaimedJob } from "@borsoga/db";
 import { config } from "./config";
 import { auditProspect, type AuditProspectPayload } from "./handlers/audit-prospect";
+import { draftProposal, type DraftProposalPayload } from "./handlers/draft-proposal";
+import { recheckFinding, type RecheckFindingPayload } from "./handlers/recheck-finding";
 import { scanZone, type ScanZonePayload } from "./handlers/scan-zone";
 import { errorMessage, log } from "./log";
+import { startScheduler } from "./scheduler";
 import { closeBrowser } from "./tools";
 
 const shutdown = new AbortController();
@@ -21,9 +24,13 @@ let inFlight = 0;
 async function dispatch(job: ClaimedJob): Promise<void> {
   switch (job.kind) {
     case "scan.zone":
-      return scanZone(job.payload as ScanZonePayload);
+      return scanZone(job.payload as ScanZonePayload, shutdown.signal);
     case "audit.prospect":
       return auditProspect(job.payload as AuditProspectPayload, shutdown.signal);
+    case "finding.recheck":
+      return recheckFinding(job.payload as RecheckFindingPayload, shutdown.signal);
+    case "proposal.draft":
+      return draftProposal(job.payload as DraftProposalPayload, shutdown.signal);
     default:
       throw new Error(`tipo de trabajo no soportado: ${job.kind}`);
   }
@@ -58,6 +65,8 @@ async function loop(): Promise<void> {
   }, 5 * 60_000);
   reaper.unref();
 
+  const stopScheduler = startScheduler();
+
   log.info("worker en marcha", {
     id: config.WORKER_ID,
     proveedor: config.LLM_PROVIDER,
@@ -83,6 +92,7 @@ async function loop(): Promise<void> {
   }
 
   clearInterval(reaper);
+  stopScheduler();
 }
 
 function sleep(ms: number): Promise<void> {
