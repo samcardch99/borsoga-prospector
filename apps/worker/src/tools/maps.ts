@@ -292,18 +292,39 @@ const inputSchema = {
 
 type Input = { query: string; detailLimit?: number };
 
-function line(card: MapsCard): string {
+/**
+ * Una ficha por bloque, con cada campo etiquetado.
+ *
+ * Antes esto era una línea con los campos separados por `|`, y estaba mal por
+ * una razón que no se ve hasta que muerde: hay nombres de negocio que llevan
+ * una barra vertical. "D'Cassa | Custom Kitchens & Closets" desplazaba todos
+ * los campos un puesto, así que el agente leía "sin valoraciones" donde tenía
+ * que estar la web y anotaba `null` — honestamente, porque eso era lo que
+ * ponía. Cuatro prospectos seguidos entraron sin web por esto, sin un solo
+ * error por ninguna parte.
+ *
+ * La lección es general: no se separa con un carácter que puede aparecer en el
+ * dato. Etiquetar cada campo cuesta unos tokens y quita la clase entera de
+ * fallo.
+ */
+function block(card: MapsCard, index: number): string {
   const nota =
-    card.rating !== null ? `${card.rating}★ (${card.reviewCount ?? 0})` : "sin valoraciones";
+    card.rating !== null
+      ? `${card.rating}★ sobre ${card.reviewCount ?? 0} reseñas`
+      : "sin valoraciones";
+
+  const web = card.website ?? (card.detailFailed ? "SIN COMPROBAR (falló abrir la ficha)" : "no tiene");
+
   return [
-    card.name,
-    card.category ?? "sector sin clasificar",
-    card.address ?? "sin dirección",
-    nota,
-    card.website ?? (card.detailFailed ? "SIN COMPROBAR" : "SIN WEB"),
-    card.phone ?? "sin teléfono",
-    card.ftid,
-  ].join(" | ");
+    `${index + 1}. ${card.name}`,
+    `   id: ${card.ftid}`,
+    `   web: ${web}`,
+    `   categoría: ${card.category ?? "sin clasificar"}`,
+    `   dirección: ${card.address ?? "sin dirección"}`,
+    `   teléfono: ${card.phone ?? "sin teléfono"}`,
+    `   valoración: ${nota}`,
+    `   coordenadas: ${card.lat ?? "?"}, ${card.lng ?? "?"}`,
+  ].join("\n");
 }
 
 export const searchMapsTool: AgentTool<Input> = {
@@ -405,8 +426,7 @@ export const searchMapsTool: AgentTool<Input> = {
               ? `Quedan ${found - cards.length} sin abrir. Si este término rinde, repítelo con detailLimit más alto.`
               : "Se abrieron todos los que había.",
             "",
-            "nombre | categoría | dirección | valoración | web | teléfono | id",
-            ...cards.map(line),
+            ...cards.map(block),
           ].join("\n"),
           layer: "external_source",
           method: `Google Maps · navegador real · ${cards.length} fichas`,
