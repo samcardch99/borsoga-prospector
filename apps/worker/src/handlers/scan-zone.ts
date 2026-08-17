@@ -133,6 +133,22 @@ export async function scanZone(payload: ScanZonePayload, signal: AbortSignal): P
     if (seen.has(business.sourceId)) continue;
     seen.add(business.sourceId);
 
+    /*
+     * El array de sectores se construye elemento a elemento a propósito.
+     * Interpolar el array de JavaScript directamente en la plantilla `sql`
+     * hace que Drizzle lo expanda en marcadores sueltos —`($1, $2, $3)`— y eso
+     * no es un array de Postgres sino un constructor de fila, así que el
+     * `::sector[]` revienta. Costó descubrirlo porque el fallo solo aparece al
+     * guardar, y hasta hoy `scan.zone` nunca había llegado a guardar nada.
+     */
+    const sectorsArray =
+      business.sectors.length > 0
+        ? sql`ARRAY[${sql.join(
+            business.sectors.map((s) => sql`${s}`),
+            sql`, `,
+          )}]::sector[]`
+        : sql`ARRAY[]::sector[]`;
+
     const [row] = await db
       .insert(prospects)
       .values({
@@ -160,7 +176,7 @@ export async function scanZone(payload: ScanZonePayload, signal: AbortSignal): P
           website: business.website,
           phone: business.phone,
           // El sector lo afina el agente al auditar; aquí solo se suma la pista.
-          sectors: sql`array(select distinct unnest(${prospects.sectors} || ${business.sectors}::sector[]))`,
+          sectors: sql`array(select distinct unnest(${prospects.sectors} || ${sectorsArray}))`,
         },
       })
       .returning({ id: prospects.id });
