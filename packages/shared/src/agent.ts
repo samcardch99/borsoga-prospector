@@ -26,6 +26,8 @@ import type { Evidence, EvidenceLayer } from "./types";
 export type AgentToolName =
   /** Ficha de Places por placeId. Cachea 30 días; cuenta contra la cuota. */
   | "places_details"
+  /** Descubrimiento: negocios de una zona raspando Google Maps. */
+  | "search_maps"
   /** HTML tal cual lo sirve el servidor — lo que ve el buscador. */
   | "fetch_served_html"
   /** DOM tras ejecutar JS en navegador real — lo que ve el usuario. */

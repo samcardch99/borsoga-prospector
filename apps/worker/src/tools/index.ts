@@ -17,7 +17,16 @@ import { renderDomTool, screenshotTool } from "./browser";
 import { crawlSiteTool } from "./crawl";
 import { fetchServedHtmlTool } from "./http";
 import { lighthouseTool } from "./lighthouse";
+import { searchMapsTool } from "./maps";
 import { placesDetailsTool } from "./places";
+
+/**
+ * Las del descubrimiento. Van aparte de las del auditor porque el trabajo es
+ * otro: aquí no se juzga un negocio, se busca cuáles hay.
+ */
+export const prospectorTools: readonly AgentTool<never>[] = [
+  searchMapsTool,
+] as readonly AgentTool<never>[];
 
 export const auditorTools: readonly AgentTool<never>[] = [
   placesDetailsTool,

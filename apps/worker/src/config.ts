@@ -54,6 +54,19 @@ const envSchema = z.object({
    */
   SCAN_MAX_PROSPECTS: int.default(25),
 
+  /**
+   * Con qué agente de usuario se pide Google Maps.
+   *
+   * Aparte del resto del rastreo, y con un Chrome corriente por defecto, porque
+   * con el agente propio del worker Maps no devuelve la lista. Va explícito y
+   * con su motivo escrito, en vez de escondido dentro del raspador.
+   */
+  MAPS_USER_AGENT: z
+    .string()
+    .default(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+    ),
+
   CRAWL_USER_AGENT: z.string().default("BorsogaProspector/0.1 (+https://borsoga.studio/bot)"),
   CRAWL_REQUESTS_PER_SECOND: num.default(1),
   CRAWL_MAX_PAGES_PER_SITE: int.default(25),
