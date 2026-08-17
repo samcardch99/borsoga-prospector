@@ -52,7 +52,13 @@ export async function scanZone(payload: ScanZonePayload, signal: AbortSignal): P
 
   // ─── El run ────────────────────────────────────────────────────────────────
 
-  const ctx: AgentToolContext = { scanId, prospectId: null, signal, rateLimit: waitTurn };
+  const ctx: AgentToolContext = {
+    scanId,
+    prospectId: null,
+    signal,
+    rateLimit: waitTurn,
+    area: { lat: zone.centerLat, lng: zone.centerLng, radiusMeters: zone.radiusMeters },
+  };
 
   const pendingWrites: Promise<void>[] = [];
   const onStep = (call: AgentToolCall): void => {

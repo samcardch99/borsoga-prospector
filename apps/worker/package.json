@@ -9,7 +9,8 @@
     "enqueue": "node --env-file=../../.env --import tsx src/cli/enqueue.ts",
     "test": "node --import tsx --test 'src/**/*.test.ts'",
     "typecheck": "tsc --noEmit",
-    "probe-maps": "node --env-file=../../.env --import tsx src/cli/probe-maps.ts"
+    "probe-maps": "node --env-file=../../.env --import tsx src/cli/probe-maps.ts",
+    "probe-step": "node --env-file=../../.env --import tsx src/cli/probe-step.ts"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.233",

@@ -279,14 +279,6 @@ const inputSchema = {
     .describe(
       'Qué buscar, en inglés y como lo escribiría una persona en Google Maps: "custom kitchen cabinets", "architectural millwork". Los términos en inglés devuelven mucho más en el sur de Florida.',
     ),
-  lat: z.number().describe("Latitud del centro de la búsqueda"),
-  lng: z.number().describe("Longitud del centro de la búsqueda"),
-  radiusMeters: z
-    .number()
-    .int()
-    .min(500)
-    .max(50_000)
-    .describe("Radio en metros. Lo que caiga fuera se descarta."),
   detailLimit: z
     .number()
     .int()
@@ -298,13 +290,7 @@ const inputSchema = {
     ),
 };
 
-type Input = {
-  query: string;
-  lat: number;
-  lng: number;
-  radiusMeters: number;
-  detailLimit?: number;
-};
+type Input = { query: string; detailLimit?: number };
 
 function line(card: MapsCard): string {
   const nota =
@@ -323,7 +309,8 @@ function line(card: MapsCard): string {
 export const searchMapsTool: AgentTool<Input> = {
   name: "search_maps",
   description:
-    "Busca negocios en Google Maps dentro de un radio y devuelve, de cada uno: nombre, categoría, " +
+    "Busca negocios en Google Maps dentro del área de la zona que se está escaneando —el centro y el " +
+    "radio los pone la zona, tú solo eliges qué buscar— y devuelve, de cada uno: nombre, categoría, " +
     "dirección, valoración, número de reseñas, teléfono, web e identificador estable. " +
     "Es la herramienta de descubrimiento: úsala varias veces con términos distintos para cubrir un " +
     "sector, porque Maps devuelve cosas muy diferentes según cómo se pregunte. " +
@@ -332,6 +319,15 @@ export const searchMapsTool: AgentTool<Input> = {
 
   async run(input, ctx): Promise<ToolResult> {
     const detailLimit = input.detailLimit ?? 6;
+
+    const area = ctx.area;
+    if (!area) {
+      return {
+        ok: false,
+        errorCode: "NO_AREA",
+        message: "search_maps solo se puede usar dentro del escaneo de una zona.",
+      };
+    }
 
     const spent = (searchesByScan.get(ctx.scanId) ?? 0) + 1;
     searchesByScan.set(ctx.scanId, spent);
@@ -352,9 +348,9 @@ export const searchMapsTool: AgentTool<Input> = {
     try {
       result = await searchMaps({
         query: input.query,
-        lat: input.lat,
-        lng: input.lng,
-        radiusMeters: input.radiusMeters,
+        lat: area.lat,
+        lng: area.lng,
+        radiusMeters: area.radiusMeters,
         detailLimit,
       });
     } catch (err) {
@@ -379,8 +375,8 @@ export const searchMapsTool: AgentTool<Input> = {
         observations: [
           observe({
             tool: "search_maps",
-            url: searchUrl(input.query, input.lat, input.lng, input.radiusMeters),
-            quote: `Búsqueda en Google Maps: "${input.query}" · radio ${input.radiusMeters} m. Sin resultados dentro del área.`,
+            url: searchUrl(input.query, area.lat, area.lng, area.radiusMeters),
+            quote: `Búsqueda en Google Maps: "${input.query}" · radio ${area.radiusMeters} m. Sin resultados dentro del área.`,
             layer: "external_source",
             method: "Google Maps · navegador real · sin resultados",
             raw: { query: input.query, cards: [] },
@@ -398,9 +394,9 @@ export const searchMapsTool: AgentTool<Input> = {
       observations: [
         observe({
           tool: "search_maps",
-          url: searchUrl(input.query, input.lat, input.lng, input.radiusMeters),
+          url: searchUrl(input.query, area.lat, area.lng, area.radiusMeters),
           quote: [
-            `Búsqueda en Google Maps: "${input.query}" · radio ${input.radiusMeters} m`,
+            `Búsqueda en Google Maps: "${input.query}" · radio ${area.radiusMeters} m`,
             `${found} negocios dentro del radio; se abrió la ficha de ${cards.length}, ${conWeb} con web`,
             sinComprobar > 0
               ? `Ojo: de ${sinComprobar} no se pudo abrir la ficha, así que su web está SIN COMPROBAR — no es que no tengan.`

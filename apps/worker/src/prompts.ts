@@ -288,6 +288,6 @@ export function prospectorPrompt(args: {
     `Ticket mínimo de la zona: ${args.minTicketUsd.toLocaleString("es-ES")} USD.`,
     "",
     `Encuentra hasta ${args.maxBusinesses} negocios distintos dentro de ese radio.`,
-    "Pasa el mismo centro y radio a cada búsqueda; lo de fuera se descarta solo.",
+    "El área la pone la zona: tú solo eliges los términos.",
   ].join("\n");
 }
