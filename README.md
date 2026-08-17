@@ -1,8 +1,13 @@
 # Borsoga Prospector
 
-Plataforma interna de prospección B2B para el sur de Florida. Busca negocios con
-Google Places, audita su presencia digital, detecta deficiencias que Borsoga
-puede resolver y las convierte en una propuesta de colaboración.
+Plataforma interna de prospección B2B para el sur de Florida. Busca negocios en
+Google Maps, audita su presencia digital, detecta deficiencias que Borsoga puede
+resolver y las convierte en una propuesta de colaboración.
+
+Lo hace un agente de principio a fin: elige qué buscar, decide qué mirar de cada
+negocio y cuándo ha visto suficiente. La interfaz enseña ese proceso mientras
+ocurre —la Traza paso a paso, la ventana de auditoría en vivo sobre el mapa— y
+no solo su resultado.
 
 El handoff de diseño original está en `docs/handoff.md`, y la referencia visual
 en `docs/design/prospector-control-center-v3.dc.html` (se abre en el navegador).
@@ -24,14 +29,14 @@ createdb -U postgres borsoga_prospector
 
 pnpm install
 pnpm --filter @borsoga/worker exec playwright install chromium
-cp .env.example .env          # rellena DATABASE_URL y GOOGLE_PLACES_API_KEY
+cp .env.example .env          # basta con DATABASE_URL; Places ya no hace falta
 pnpm db:migrate
 
 pnpm dev                      # web: http://localhost:3000
 pnpm dev:worker               # worker: tira de la cola y programa las zonas
 
 pnpm typecheck                # los cuatro paquetes
-pnpm test                     # de momento solo la regla de programación
+pnpm test                     # 77 pruebas: scoring, precios, geo, robots, parseo de Maps
 ```
 
 La raíz de `/` es la vista de Mapa: lista, mapa y expediente resumido leyendo
@@ -94,14 +99,15 @@ tocar el código de la vista, porque hablan el mismo formato de estilo.
 
 ### Meter trabajo en la cola sin interfaz
 
-La vista de Zonas todavía no existe, así que el worker trae una utilidad para
-lanzar trabajo a mano. Se borra el día que exista la pantalla.
+La vista de Zonas ya existe, pero el worker conserva su utilidad de línea de
+comandos: sirve para lanzar trabajo suelto y, sobre todo, para mirar qué está
+pasando cuando lo que falla es la propia interfaz.
 
 ```bash
-# Escanear una zona (necesita GOOGLE_PLACES_API_KEY)
+# Escanear una zona: el agente busca en Google Maps, sin claves
 pnpm --filter @borsoga/worker enqueue zone "Doral" miami_dade 25.809 -80.355 8000 kitchens,cabinetry
 
-# Auditar un solo negocio, sin gastar cuota de Places
+# Auditar un solo negocio ya conocido, sin pasar por la búsqueda
 pnpm --filter @borsoga/worker enqueue prospect "Nombre" https://ejemplo.com Miami
 
 # Qué hay en la cola y en qué estado
@@ -109,7 +115,21 @@ pnpm --filter @borsoga/worker enqueue status
 
 # Qué devolvió cada llamada a herramienta, la última primero
 pnpm --filter @borsoga/worker enqueue steps
+
+# Nombre, web, teléfono y coordenadas de los prospectos, leídos de la tabla
+pnpm --filter @borsoga/worker probe-prospects
+
+# La cita íntegra de la última búsqueda en Maps
+pnpm --filter @borsoga/worker probe-step
+
+# Probar el raspado suelto, sin cola ni base de datos
+pnpm --filter @borsoga/worker probe-maps "custom kitchen cabinets" 25.809 -80.355 8000 4
 ```
+
+`probe-prospects` existe por una lección cara: este dato se midió durante horas
+contra `/api/prospects`, que no devuelve `website`, así que salía vacío y
+parecía un fallo de guardado que no existía. Una regla sin la marca que buscas
+no dice "no sé": dice cero.
 
 `status` y `steps` son para cuando lo que falla es la propia interfaz: enseñan
 lo mismo que la Traza, pero sin depender de que la web arranque.
@@ -165,10 +185,20 @@ Lo que salió, con números:
 - La propuesta se armó sola desde los hallazgos confirmados, con dos fases
   derivadas del score de cada rama, y la IA redactó los dos bloques de texto.
 
-**El escaneo de zona no se pudo probar**: `GOOGLE_PLACES_API_KEY` está vacía en
-el `.env`, así que `scan.zone` falló sus cinco intentos y quedó en `failed` —el
-retroceso exponencial funcionó—. Todo lo demás del flujo se ejercitó con un
-prospecto creado a mano, que es para lo que existe `enqueue prospect`.
+**El escaneo de zona ya funciona, y sin ninguna clave.** Durante mucho tiempo no
+se pudo probar —`GOOGLE_PLACES_API_KEY` estaba vacía y `scan.zone` agotaba sus
+cinco intentos—, así que el resto del flujo se ejercitaba con prospectos creados
+a mano. Hoy el descubrimiento lo hace el agente raspando Google Maps
+(`search_maps`), y un escaneo de Doral devuelve negocios reales con su web,
+teléfono, valoración y posición:
+
+    Atem Construction Inc     atemconstruction.net    25.808795, -80.3642884
+    Brito Built               britobuilt.com          25.8106612,-80.3660899
+    Jomar Marble & Granite    jomarmarble.com         25.7928095,-80.3480642
+
+Sobre el raspado y sus condiciones —que va contra los términos de Google, que
+se rinde ante un CAPTCHA en vez de intentar resolverlo, y por qué se presenta
+como un Chrome normal— está todo escrito en `apps/worker/src/tools/maps.ts`.
 
 ### Tres cosas que aprendimos ejecutándolo
 
