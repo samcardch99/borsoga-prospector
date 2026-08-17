@@ -238,6 +238,24 @@ export async function searchMaps(args: SearchMapsArgs): Promise<SearchMapsResult
 
 // ─── Herramienta del agente ──────────────────────────────────────────────────
 
+/**
+ * Cuántas búsquedas se le permiten a un escaneo, contadas de verdad.
+ *
+ * `maxTurns` no sirve para esto y conviene saber por qué: cuenta turnos del
+ * modelo, y en un solo turno caben varias llamadas a herramienta. Con 16 turnos
+ * un escaneo encadenó más de veinte búsquedas y estuvo veinte minutos sin
+ * cerrar. El presupuesto que importa es este, y se cuenta aquí.
+ *
+ * Al agotarse no se devuelve un error: se le dice al agente que ya ha buscado
+ * bastante y que entregue. Un error le invita a reintentar, que es lo contrario
+ * de lo que hace falta.
+ */
+const searchesByScan = new Map<string, number>();
+
+export function resetSearchBudget(scanId: string): void {
+  searchesByScan.delete(scanId);
+}
+
 const inputSchema = {
   query: z
     .string()
@@ -298,6 +316,17 @@ export const searchMapsTool: AgentTool<Input> = {
   async run(input, ctx): Promise<ToolResult> {
     const detailLimit = input.detailLimit ?? 6;
 
+    const spent = (searchesByScan.get(ctx.scanId) ?? 0) + 1;
+    searchesByScan.set(ctx.scanId, spent);
+
+    if (spent > config.MAPS_MAX_SEARCHES_PER_SCAN) {
+      return {
+        ok: true,
+        summary: `Presupuesto de búsquedas agotado (${config.MAPS_MAX_SEARCHES_PER_SCAN}). Entrega ya lo que tengas.`,
+        observations: [],
+      };
+    }
+
     // Un solo hueco de rate limit para todo el barrido: dentro va una
     // navegación por ficha y no conviene encadenarlas sin freno.
     await ctx.rateLimit("www.google.com");
@@ -320,11 +349,26 @@ export const searchMapsTool: AgentTool<Input> = {
 
     const { cards, found } = result;
 
+    /*
+     * Cero resultados no es un fallo: es una respuesta, y de las útiles. Se
+     * devolvía como error, y un error invita a reintentar con otro término —
+     * justo lo contrario de lo que hay que hacer cuando la zona ya se ha
+     * barrido. Decirlo como resultado deja al agente parar cuando toca.
+     */
     if (cards.length === 0) {
       return {
-        ok: false,
-        errorCode: "MAPS_EMPTY",
-        message: `"${input.query}" no devolvió ningún negocio dentro del radio.`,
+        ok: true,
+        summary: `Ningún negocio para "${input.query}" dentro del radio`,
+        observations: [
+          observe({
+            tool: "search_maps",
+            url: searchUrl(input.query, input.lat, input.lng, input.radiusMeters),
+            quote: `Búsqueda en Google Maps: "${input.query}" · radio ${input.radiusMeters} m. Sin resultados dentro del área.`,
+            layer: "external_source",
+            method: "Google Maps · navegador real · sin resultados",
+            raw: { query: input.query, cards: [] },
+          }),
+        ],
       };
     }
 

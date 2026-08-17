@@ -33,6 +33,7 @@ import { recordStep, recordToolCall } from "../persist/trace";
 import { prospectorPrompt, prospectorSystem } from "../prompts";
 import { getProvider } from "../providers";
 import { prospectorTools } from "../tools";
+import { resetSearchBudget } from "../tools/maps";
 
 export interface ScanZonePayload {
   scanId: string;
@@ -94,6 +95,7 @@ export async function scanZone(payload: ScanZonePayload, signal: AbortSignal): P
   }
 
   await Promise.all(pendingWrites);
+  resetSearchBudget(scanId);
 
   const report = run.json as { businesses?: DiscoveredBusiness[]; queries?: string[]; notes?: string } | null;
 

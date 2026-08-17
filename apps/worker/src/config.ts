@@ -38,6 +38,12 @@ const envSchema = z.object({
   LLM_MAX_TURNS_ZONE: int.default(16),
 
   /**
+   * Búsquedas de Maps por escaneo. Es el tope que de verdad acota un escaneo:
+   * ver la explicación en `tools/maps.ts`, junto al contador.
+   */
+  MAPS_MAX_SEARCHES_PER_SCAN: int.default(8),
+
+  /**
    * Deja que el auditor use la búsqueda web integrada del Agent SDK.
    *
    * Va contra la suscripción, no contra una API de terceros, así que no cuesta
